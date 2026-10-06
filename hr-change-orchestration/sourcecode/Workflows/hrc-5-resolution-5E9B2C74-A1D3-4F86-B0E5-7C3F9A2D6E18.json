@@ -1,0 +1,554 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_SharePoint"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Office365Outlook"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_slack": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Slack"
+        },
+        "api": {
+          "name": "shared_slack"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "HRC SharePoint Site (hrc_SPSite)": {
+          "defaultValue": "https://contoso.sharepoint.com/sites/PeopleOps",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_SPSite"
+          }
+        },
+        "HRC Requests List (hrc_RequestsList)": {
+          "defaultValue": "HR Change Requests",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_RequestsList"
+          }
+        },
+        "HRC Tasks List (hrc_TasksList)": {
+          "defaultValue": "HR Change Tasks",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TasksList"
+          }
+        },
+        "HRC Templates List (hrc_TemplatesList)": {
+          "defaultValue": "HR Change Templates",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TemplatesList"
+          }
+        },
+        "HRC Change Types List (hrc_ChangeTypesList)": {
+          "defaultValue": "HR Change Types",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ChangeTypesList"
+          }
+        },
+        "HRC Approval Matrix List (hrc_ApprovalMatrixList)": {
+          "defaultValue": "HR Approval Matrix",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ApprovalMatrixList"
+          }
+        },
+        "HRC Settings (hrc_Settings)": {
+          "defaultValue": {
+            "requestPrefix": "HRC-",
+            "timeZone": "Eastern Standard Time",
+            "adminEmail": "cj@contoso.com",
+            "sendSubmitterConfirmation": true,
+            "intakeFormUrl": "https://contoso.sharepoint.com/sites/PeopleOps/Lists/HRChangeRequests/NewForm.aspx",
+            "slack": {
+              "intakeChannel": "<channel id of the People Ops room>",
+              "payrollChannel": "<channel id of the Payroll team room>",
+              "managersChannel": "<channel id of the people-managers channel>"
+            },
+            "payrollCutoffDays": [
+              10,
+              25
+            ],
+            "cutoffReminderBusinessDays": 2
+          },
+          "type": "Object",
+          "metadata": {
+            "schemaName": "hrc_Settings"
+          }
+        }
+      },
+      "triggers": {
+        "When_a_request_is_resolved": {
+          "recurrence": {
+            "interval": 1,
+            "frequency": "Minute"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnUpdatedItems",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+              "table": "@parameters('HRC Requests List (hrc_RequestsList)')"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "conditions": [
+            {
+              "expression": "@equals(triggerOutputs()?['body/Status']?['Value'], '3-Resolved')"
+            },
+            {
+              "expression": "@empty(triggerOutputs()?['body/CompletionDate'])"
+            }
+          ],
+          "description": "Fires once per resolution: the flow stamps Completion date, so later edits don't re-fire it. Clear Completion date to re-run."
+        }
+      },
+      "actions": {
+        "Initialize_Settings": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Settings",
+                "type": "object",
+                "value": "@parameters('HRC Settings (hrc_Settings)')"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Try": {
+          "type": "Scope",
+          "actions": {
+            "Get_change_type_config": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Change Types List (hrc_ChangeTypesList)')",
+                  "$filter": "Title eq '@{triggerOutputs()?['body/ChangeType']?['Value']}'",
+                  "$top": 1
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "description": "Per-change-type settings (SLA, approval chain, notifications) are data in the HR Change Types list, so HR can change them without editing flows.",
+              "runAfter": {}
+            },
+            "Compose_Change_Type_Config": {
+              "type": "Compose",
+              "inputs": "@first(outputs('Get_change_type_config')?['body/value'])",
+              "runAfter": {
+                "Get_change_type_config": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_Outcome": {
+              "type": "Compose",
+              "inputs": "@coalesce(triggerOutputs()?['body/Outcome']?['Value'], 'Completed')",
+              "runAfter": {
+                "Compose_Change_Type_Config": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_Resolver": {
+              "type": "Compose",
+              "inputs": "@coalesce(triggerOutputs()?['body/Assignee']?['DisplayName'], triggerOutputs()?['body/Editor']?['DisplayName'])",
+              "runAfter": {
+                "Compose_Outcome": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Update_request_-_completion_date": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Requests List (hrc_RequestsList)')",
+                  "id": "@triggerOutputs()?['body/ID']",
+                  "item/Title": "@triggerOutputs()?['body/Title']",
+                  "item/CompletionDate": "@formatDateTime(convertFromUtc(utcNow(), variables('Settings')?['timeZone']), 'yyyy-MM-dd')",
+                  "item/Outcome/Value": "@outputs('Compose_Outcome')"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "description": "Stamps Completion date the moment Status flips to 3-Resolved.",
+              "runAfter": {
+                "Compose_Resolver": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Get_open_tasks": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Tasks List (hrc_TasksList)')",
+                  "$filter": "RequestId eq '@{triggerOutputs()?['body/RequestId']}' and TaskStatus ne 'Done' and TaskStatus ne 'Cancelled' and TaskStatus ne 'N/A'",
+                  "$top": 500
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {
+                "Update_request_-_completion_date": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Apply_to_each_open_task": {
+              "type": "Foreach",
+              "foreach": "@outputs('Get_open_tasks')?['body/value']",
+              "actions": {
+                "Condition_-_task_closes_with_case": {
+                  "type": "If",
+                  "expression": {
+                    "or": [
+                      {
+                        "not": {
+                          "equals": [
+                            "@outputs('Compose_Outcome')",
+                            "Completed"
+                          ]
+                        }
+                      },
+                      {
+                        "equals": [
+                          "@items('Apply_to_each_open_task')?['Automation']?['Value']",
+                          "Resolution"
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Update_open_task": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "PatchItem",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                          "table": "@parameters('HRC Tasks List (hrc_TasksList)')",
+                          "id": "@items('Apply_to_each_open_task')?['ID']",
+                          "item/Title": "@items('Apply_to_each_open_task')?['Title']",
+                          "item/TaskStatus/Value": "@if(equals(outputs('Compose_Outcome'), 'Completed'), 'Done', 'Cancelled')"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      },
+                      "description": "'Close the loop' / 'Mark complete' / 'Log completion' steps are done by this flow. On Rejected/Withdrawn everything open is cancelled.",
+                      "runAfter": {}
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "runAfter": {}
+                }
+              },
+              "runAfter": {
+                "Get_open_tasks": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_tasks_still_open": {
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_open_tasks')?['body/value']",
+                "where": "@and(equals(outputs('Compose_Outcome'), 'Completed'), not(equals(item()?['Automation']?['Value'], 'Resolution')))"
+              },
+              "runAfter": {
+                "Apply_to_each_open_task": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_resolved_comment": {
+              "type": "Compose",
+              "inputs": {
+                "text": "✅ Resolved on @{formatDateTime(convertFromUtc(utcNow(), variables('Settings')?['timeZone']), 'MMM d, yyyy')} by @{outputs('Compose_Resolver')}@{if(equals(outputs('Compose_Outcome'), 'Completed'), '', concat(' (Outcome: ', outputs('Compose_Outcome'), ')'))}@{if(greater(length(body('Filter_tasks_still_open')), 0), concat(' — note: ', string(length(body('Filter_tasks_still_open'))), ' checklist task(s) were still open'), '')}"
+              },
+              "runAfter": {
+                "Filter_tasks_still_open": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Post_resolved_comment": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "parameters/method": "POST",
+                  "parameters/uri": "_api/web/lists/getbytitle('@{parameters('HRC Requests List (hrc_RequestsList)')}')/items(@{triggerOutputs()?['body/ID']})/Comments",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata",
+                    "Content-Type": "application/json;odata=nometadata"
+                  },
+                  "parameters/body": "@{string(outputs('Compose_resolved_comment'))}"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "description": "Item comments are the case work log (replaces the Slack List item thread).",
+              "runAfter": {
+                "Compose_resolved_comment": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Condition_-_close_the_loop": {
+              "type": "If",
+              "expression": {
+                "or": [
+                  {
+                    "equals": [
+                      "@outputs('Compose_Change_Type_Config')?['CloseLoopEmail']",
+                      true
+                    ]
+                  },
+                  {
+                    "not": {
+                      "equals": [
+                        "@outputs('Compose_Outcome')",
+                        "Completed"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "actions": {
+                "Send_close_the_loop_email": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_office365",
+                      "operationId": "SendEmailV2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                    },
+                    "parameters": {
+                      "emailMessage/To": "@coalesce(triggerOutputs()?['body/RequestedBy']?['Email'], triggerOutputs()?['body/Author']?['Email'])",
+                      "emailMessage/Subject": "@{if(equals(outputs('Compose_Outcome'), 'Completed'), 'Completed', outputs('Compose_Outcome'))}: @{triggerOutputs()?['body/Title']} [@{triggerOutputs()?['body/RequestId']}]",
+                      "emailMessage/Body": "<p>Your HR change request <b>@{triggerOutputs()?['body/RequestId']}</b> (@{triggerOutputs()?['body/ChangeType']?['Value']} for @{triggerOutputs()?['body/EmployeeName']}) is <b>@{toLower(outputs('Compose_Outcome'))}</b>.</p>@{if(empty(triggerOutputs()?['body/ApprovalHistory']), '', concat('<p><b>Approvals</b><br/>', replace(triggerOutputs()?['body/ApprovalHistory'], decodeUriComponent('%0A'), '<br/>'), '</p>'))}<p><a href=\"@{triggerOutputs()?['body/{Link}']}\">View the request</a></p><p>People Ops</p>",
+                      "emailMessage/Importance": "Normal"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {}
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "description": "Close-the-loop to the requestor (always sent for Rejected/Withdrawn).",
+              "runAfter": {
+                "Post_resolved_comment": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Condition_-_summary_to_intake_channel": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@outputs('Compose_Change_Type_Config')?['PostSummaryToIntake']",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Post_summary_to_intake_channel": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_slack",
+                      "operationId": "PostMessageV2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack"
+                    },
+                    "parameters": {
+                      "postMessageRequest/channel": "@variables('Settings')?['slack']?['intakeChannel']",
+                      "postMessageRequest/text": ":white_check_mark: *<@{triggerOutputs()?['body/{Link}']}|@{triggerOutputs()?['body/RequestId']}>* @{triggerOutputs()?['body/ChangeType']?['Value']} — @{triggerOutputs()?['body/EmployeeName']} resolved by @{outputs('Compose_Resolver')} (@{outputs('Compose_Outcome')}).@{if(greater(length(body('Filter_tasks_still_open')), 0), concat(' :warning: ', string(length(body('Filter_tasks_still_open'))), ' task(s) still open.'), '')}"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {}
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Condition_-_close_the_loop": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              }
+            },
+            "Condition_-_payroll_notification": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@outputs('Compose_Change_Type_Config')?['NotifyPayrollOnResolve']",
+                      true
+                    ]
+                  },
+                  {
+                    "equals": [
+                      "@outputs('Compose_Outcome')",
+                      "Completed"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Notify_Payroll_room": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_slack",
+                      "operationId": "PostMessageV2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack"
+                    },
+                    "parameters": {
+                      "postMessageRequest/channel": "@variables('Settings')?['slack']?['payrollChannel']",
+                      "postMessageRequest/text": ":moneybag: *Extra shift earning submitted in Paycor* — <@{triggerOutputs()?['body/{Link}']}|@{triggerOutputs()?['body/RequestId']}>\nEmployee: @{triggerOutputs()?['body/EmployeeName']} (@{triggerOutputs()?['body/EmployeeId']})\nDates worked: @{coalesce(triggerOutputs()?['body/DatesWorked'], formatDateTime(triggerOutputs()?['body/StartDate'], 'MMM d, yyyy'))}\nShift: @{coalesce(triggerOutputs()?['body/ShiftType']?['Value'], '-')}  •  Rate: @{coalesce(triggerOutputs()?['body/RateType']?['Value'], '-')} @{coalesce(string(triggerOutputs()?['body/RateAmount']), '')}  •  Hours/days: @{coalesce(string(triggerOutputs()?['body/HoursOrDays']), '-')}\nPay period: @{coalesce(triggerOutputs()?['body/PayPeriod'], '-')}@{if(equals(triggerOutputs()?['body/AfterCutoff'], true), '  :warning: submitted after cutoff', '')}\n_FYI only — please verify the earning is set up correctly in Paycor. No response needed; this case is closed on the People Ops side._"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "description": "Flow 3 'Payroll Notification' from the plan - one-way, never a gate.",
+                  "runAfter": {}
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Condition_-_summary_to_intake_channel": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_Settings": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Catch": {
+          "type": "Scope",
+          "runAfter": {
+            "Try": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "description": "Catch: alert the admin with a link to the failed run.",
+          "actions": {
+            "Send_failure_alert": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "@variables('Settings')?['adminEmail']",
+                  "emailMessage/Subject": "[HR Change] HR Change - 5 Resolution failed",
+                  "emailMessage/Body": "<p>The <b>HR Change - 5 Resolution</b> flow failed.</p><p><a href=\"@{concat('https://make.powerautomate.com/environments/', workflow()?['tags']?['environmentName'], '/flows/', workflow()?['name'], '/runs/', workflow()?['run']?['name'])}\">Open the failed run</a></p>",
+                  "emailMessage/Importance": "High"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {}
+            },
+            "Terminate_as_failed": {
+              "runAfter": {
+                "Send_failure_alert": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "HRChangeFlowFailed",
+                  "message": "HR Change - 5 Resolution failed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

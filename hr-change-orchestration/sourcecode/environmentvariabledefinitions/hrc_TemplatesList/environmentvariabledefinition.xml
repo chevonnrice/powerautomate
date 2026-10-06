@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="hrc_TemplatesList">
+  <defaultvalue>HR Change Templates</defaultvalue>
+  <description default="Title of the HR Change Templates list (master SOP checklists)">
+    <label description="Title of the HR Change Templates list (master SOP checklists)" languagecode="1033" />
+  </description>
+  <displayname default="HRC Templates List">
+    <label description="HRC Templates List" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

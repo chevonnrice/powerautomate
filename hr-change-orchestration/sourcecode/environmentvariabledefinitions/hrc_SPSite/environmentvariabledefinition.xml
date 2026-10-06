@@ -1,0 +1,15 @@
+<environmentvariabledefinition schemaname="hrc_SPSite">
+  <apiid>/providers/microsoft.powerapps/apis/shared_sharepointonline</apiid>
+  <description default="SharePoint site hosting the HR Change lists">
+    <label description="SharePoint site hosting the HR Change lists" languagecode="1033" />
+  </description>
+  <displayname default="HRC SharePoint Site">
+    <label description="HRC SharePoint Site" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <parameterkey>dataset</parameterkey>
+  <secretstore>0</secretstore>
+  <type>100000004</type>
+</environmentvariabledefinition>

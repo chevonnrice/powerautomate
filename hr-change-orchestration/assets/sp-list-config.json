@@ -1,0 +1,793 @@
+{
+  "lists": [
+    {
+      "title": "HR Change Requests",
+      "url": "Lists/HRChangeRequests",
+      "itemLevelPermissions": true,
+      "description": "System of record for every HR change request (replaces the HR Change Slack List). One item = one case.",
+      "fields": [
+        {
+          "internalName": "Title",
+          "type": "Text",
+          "displayName": "Request",
+          "description": "Set by the flow: [Change Type] — [Employee Name]"
+        },
+        {
+          "internalName": "RequestId",
+          "type": "Text",
+          "displayName": "Request ID",
+          "indexed": true,
+          "description": "Auto-generated: HRC-000123"
+        },
+        {
+          "internalName": "EmployeeName",
+          "type": "Text",
+          "displayName": "Employee Name",
+          "required": true,
+          "group": "Universal"
+        },
+        {
+          "internalName": "EmployeeId",
+          "type": "Text",
+          "displayName": "Employee ID",
+          "required": true,
+          "group": "Universal"
+        },
+        {
+          "internalName": "Manager",
+          "type": "User",
+          "displayName": "Manager",
+          "required": true,
+          "group": "Universal",
+          "description": "Manager approvals route here"
+        },
+        {
+          "internalName": "ChangeType",
+          "type": "Choice",
+          "displayName": "Change Type",
+          "required": true,
+          "indexed": true,
+          "choices": [
+            "A1 — Offboarding (Voluntary)",
+            "A2 — Offboarding (Involuntary)",
+            "B — Job / Status Change",
+            "C — Comp Change",
+            "D — Pay / Banking Change",
+            "E — Personal Data Change",
+            "F — Time / PTO",
+            "G — LOA",
+            "H — Benefits / Life Event",
+            "I — Fractional FTE / Extra Shift Pickup",
+            "Other"
+          ],
+          "group": "Universal"
+        },
+        {
+          "internalName": "EffectiveDate",
+          "type": "Date",
+          "displayName": "Effective Date",
+          "required": true,
+          "group": "Universal"
+        },
+        {
+          "internalName": "Region",
+          "type": "Choice",
+          "displayName": "Region",
+          "choices": [
+            "East",
+            "Central",
+            "West"
+          ],
+          "group": "Universal",
+          "description": "Used to pick the Regional approver (HR Approval Matrix). Replace with your regions"
+        },
+        {
+          "internalName": "Notes",
+          "type": "Note",
+          "displayName": "Additional Notes",
+          "group": "Universal"
+        },
+        {
+          "internalName": "RequestedBy",
+          "type": "User",
+          "displayName": "Requested By",
+          "description": "Defaults to the submitter"
+        },
+        {
+          "internalName": "Assignee",
+          "type": "User",
+          "displayName": "Assignee",
+          "indexed": true,
+          "group": "Case"
+        },
+        {
+          "internalName": "Status",
+          "type": "Choice",
+          "displayName": "Status",
+          "indexed": true,
+          "choices": [
+            "0-New",
+            "1-Assigned",
+            "2-Waiting",
+            "3-Resolved"
+          ],
+          "default": "0-New",
+          "group": "Case"
+        },
+        {
+          "internalName": "SLADueDate",
+          "type": "Date",
+          "displayName": "SLA Due Date",
+          "indexed": true,
+          "group": "Case"
+        },
+        {
+          "internalName": "CompletionDate",
+          "type": "Date",
+          "displayName": "Completion Date",
+          "group": "Case"
+        },
+        {
+          "internalName": "Outcome",
+          "type": "Choice",
+          "displayName": "Outcome",
+          "choices": [
+            "Completed",
+            "Rejected",
+            "Withdrawn"
+          ],
+          "group": "Case"
+        },
+        {
+          "internalName": "JiraLink",
+          "type": "Text",
+          "displayName": "Jira Ticket Link",
+          "group": "Case",
+          "description": "Offboarding only"
+        },
+        {
+          "internalName": "ApprovalStatus",
+          "type": "Choice",
+          "displayName": "Approval Status",
+          "choices": [
+            "Not required",
+            "Pending",
+            "Approved",
+            "Rejected",
+            "Needs approver"
+          ],
+          "default": "Not required",
+          "group": "Case"
+        },
+        {
+          "internalName": "CurrentApprover",
+          "type": "Text",
+          "displayName": "Current Approver",
+          "group": "Case"
+        },
+        {
+          "internalName": "ApprovalHistory",
+          "type": "Note",
+          "displayName": "Approval History",
+          "richText": false,
+          "group": "Case"
+        },
+        {
+          "internalName": "TasksTotal",
+          "type": "Number",
+          "displayName": "Tasks Total",
+          "default": "0",
+          "group": "Case"
+        },
+        {
+          "internalName": "TasksDone",
+          "type": "Number",
+          "displayName": "Tasks Done",
+          "default": "0",
+          "group": "Case"
+        },
+        {
+          "internalName": "ProgressPct",
+          "type": "Number",
+          "displayName": "Progress %",
+          "default": "0",
+          "min": 0,
+          "max": 100,
+          "group": "Case"
+        },
+        {
+          "internalName": "LastDay",
+          "type": "Date",
+          "displayName": "Last Day",
+          "showFor": [
+            "A1",
+            "A2"
+          ]
+        },
+        {
+          "internalName": "SeparationReason",
+          "type": "Choice",
+          "displayName": "Reason for Separation",
+          "showFor": [
+            "A1",
+            "A2"
+          ],
+          "choices": [
+            "Resignation",
+            "End of contract",
+            "Mutual separation",
+            "Termination",
+            "Reduction in force",
+            "End of contract (non-renewed)",
+            "Performance-based"
+          ]
+        },
+        {
+          "internalName": "EquipmentToRetrieve",
+          "type": "Note",
+          "displayName": "Equipment to Retrieve",
+          "richText": false,
+          "showFor": [
+            "A1",
+            "A2"
+          ]
+        },
+        {
+          "internalName": "FinalPayType",
+          "type": "Text",
+          "displayName": "Final Pay Type",
+          "showFor": [
+            "A1",
+            "A2"
+          ]
+        },
+        {
+          "internalName": "NewTitle",
+          "type": "Text",
+          "displayName": "New Title",
+          "showFor": [
+            "B"
+          ]
+        },
+        {
+          "internalName": "NewDepartment",
+          "type": "Text",
+          "displayName": "New Department",
+          "showFor": [
+            "B"
+          ]
+        },
+        {
+          "internalName": "NewLocation",
+          "type": "Text",
+          "displayName": "New Location",
+          "showFor": [
+            "B"
+          ]
+        },
+        {
+          "internalName": "EmploymentStatus",
+          "type": "Choice",
+          "displayName": "FT / PT / PRN",
+          "choices": [
+            "FT",
+            "PT",
+            "PRN"
+          ],
+          "showFor": [
+            "B"
+          ]
+        },
+        {
+          "internalName": "NewRate",
+          "type": "Currency",
+          "displayName": "New Rate",
+          "showFor": [
+            "C"
+          ]
+        },
+        {
+          "internalName": "EffectivePayPeriod",
+          "type": "Text",
+          "displayName": "Effective Pay Period",
+          "showFor": [
+            "C"
+          ]
+        },
+        {
+          "internalName": "PayChangeType",
+          "type": "Choice",
+          "displayName": "Pay / Banking Change Type",
+          "choices": [
+            "Direct deposit",
+            "Tax",
+            "Garnishment"
+          ],
+          "showFor": [
+            "D"
+          ]
+        },
+        {
+          "internalName": "VerificationAttached",
+          "type": "Boolean",
+          "displayName": "Verification Attached",
+          "showFor": [
+            "D"
+          ]
+        },
+        {
+          "internalName": "FieldsChanging",
+          "type": "Text",
+          "displayName": "Field(s) Changing",
+          "showFor": [
+            "E"
+          ]
+        },
+        {
+          "internalName": "NewValue",
+          "type": "Note",
+          "displayName": "New Value",
+          "richText": false,
+          "showFor": [
+            "E"
+          ]
+        },
+        {
+          "internalName": "TimeRequestType",
+          "type": "Choice",
+          "displayName": "Time Request Type",
+          "choices": [
+            "PTO",
+            "Sick",
+            "Unpaid time off",
+            "Bereavement",
+            "Jury duty",
+            "Other"
+          ],
+          "showFor": [
+            "F"
+          ]
+        },
+        {
+          "internalName": "LeaveType",
+          "type": "Choice",
+          "displayName": "Leave Type",
+          "choices": [
+            "FMLA",
+            "Medical",
+            "Parental",
+            "Military",
+            "Personal",
+            "Other"
+          ],
+          "showFor": [
+            "G"
+          ]
+        },
+        {
+          "internalName": "StartDate",
+          "type": "Date",
+          "displayName": "Start Date / First Date Worked",
+          "showFor": [
+            "F",
+            "G",
+            "I"
+          ]
+        },
+        {
+          "internalName": "EndDate",
+          "type": "Date",
+          "displayName": "End Date / Expected Return",
+          "showFor": [
+            "F",
+            "G"
+          ]
+        },
+        {
+          "internalName": "Hours",
+          "type": "Number",
+          "displayName": "Hours",
+          "showFor": [
+            "F"
+          ]
+        },
+        {
+          "internalName": "LifeEventType",
+          "type": "Choice",
+          "displayName": "Life Event Type",
+          "choices": [
+            "Marriage",
+            "Birth / adoption",
+            "Divorce",
+            "Loss of other coverage",
+            "Death of dependent",
+            "Other"
+          ],
+          "showFor": [
+            "H"
+          ]
+        },
+        {
+          "internalName": "QualifyingDate",
+          "type": "Date",
+          "displayName": "Qualifying Date",
+          "showFor": [
+            "H"
+          ]
+        },
+        {
+          "internalName": "DocumentationAttached",
+          "type": "Boolean",
+          "displayName": "Documentation Attached",
+          "showFor": [
+            "G",
+            "H"
+          ]
+        },
+        {
+          "internalName": "DatesWorked",
+          "type": "Text",
+          "displayName": "Date(s) Worked",
+          "showFor": [
+            "I"
+          ]
+        },
+        {
+          "internalName": "ShiftType",
+          "type": "Choice",
+          "displayName": "Shift Type",
+          "choices": [
+            "Training",
+            "Weekend clinic",
+            "Coverage",
+            "Other"
+          ],
+          "showFor": [
+            "I"
+          ]
+        },
+        {
+          "internalName": "RateType",
+          "type": "Choice",
+          "displayName": "Rate Type",
+          "choices": [
+            "Hourly",
+            "Flat / day"
+          ],
+          "showFor": [
+            "I"
+          ]
+        },
+        {
+          "internalName": "RateAmount",
+          "type": "Currency",
+          "displayName": "Rate (hourly or day rate)",
+          "showFor": [
+            "I"
+          ]
+        },
+        {
+          "internalName": "HoursOrDays",
+          "type": "Number",
+          "displayName": "Hours or Days",
+          "showFor": [
+            "I"
+          ]
+        },
+        {
+          "internalName": "PayPeriod",
+          "type": "Text",
+          "displayName": "Pay Period",
+          "description": "Set by the flow for change type I",
+          "group": "Case"
+        },
+        {
+          "internalName": "AfterCutoff",
+          "type": "Boolean",
+          "displayName": "Submitted After Cutoff",
+          "group": "Case"
+        }
+      ]
+    },
+    {
+      "title": "HR Change Tasks",
+      "url": "Lists/HRChangeTasks",
+      "description": "Checklist subtasks copied from the templates for each request.",
+      "fields": [
+        {
+          "internalName": "Title",
+          "type": "Text",
+          "displayName": "Task"
+        },
+        {
+          "internalName": "Request",
+          "type": "Lookup",
+          "displayName": "Request",
+          "lookupList": "HR Change Requests",
+          "lookupField": "RequestId"
+        },
+        {
+          "internalName": "RequestId",
+          "type": "Text",
+          "displayName": "Request ID",
+          "indexed": true
+        },
+        {
+          "internalName": "ChangeType",
+          "type": "Text",
+          "displayName": "Change Type"
+        },
+        {
+          "internalName": "StepOrder",
+          "type": "Number",
+          "displayName": "Step"
+        },
+        {
+          "internalName": "Details",
+          "type": "Note",
+          "displayName": "Details",
+          "richText": false
+        },
+        {
+          "internalName": "OwnerRole",
+          "type": "Choice",
+          "displayName": "Owner",
+          "choices": [
+            "HR",
+            "CJ",
+            "Payroll",
+            "IT",
+            "Talent",
+            "Manager"
+          ],
+          "default": "HR"
+        },
+        {
+          "internalName": "Automation",
+          "type": "Choice",
+          "displayName": "Automation",
+          "choices": [
+            "None",
+            "Approval",
+            "Resolution"
+          ],
+          "default": "None"
+        },
+        {
+          "internalName": "TaskStatus",
+          "type": "Choice",
+          "displayName": "Task Status",
+          "indexed": true,
+          "choices": [
+            "Not started",
+            "In progress",
+            "Done",
+            "Blocked - awaiting approval",
+            "Cancelled",
+            "N/A"
+          ],
+          "default": "Not started"
+        },
+        {
+          "internalName": "DueDate",
+          "type": "Date",
+          "displayName": "Due Date"
+        }
+      ]
+    },
+    {
+      "title": "HR Change Templates",
+      "url": "Lists/HRChangeTemplates",
+      "description": "Master SOP checklists per change type. Standing reference only - never completed or modified during live operations.",
+      "fields": [
+        {
+          "internalName": "Title",
+          "type": "Text",
+          "displayName": "Task"
+        },
+        {
+          "internalName": "ChangeType",
+          "type": "Choice",
+          "displayName": "Change Type",
+          "indexed": true,
+          "choices": [
+            "A1 — Offboarding (Voluntary)",
+            "A2 — Offboarding (Involuntary)",
+            "B — Job / Status Change",
+            "C — Comp Change",
+            "D — Pay / Banking Change",
+            "E — Personal Data Change",
+            "F — Time / PTO",
+            "G — LOA",
+            "H — Benefits / Life Event",
+            "I — Fractional FTE / Extra Shift Pickup",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "StepOrder",
+          "type": "Number",
+          "displayName": "Step"
+        },
+        {
+          "internalName": "Details",
+          "type": "Note",
+          "displayName": "Details",
+          "richText": false
+        },
+        {
+          "internalName": "OwnerRole",
+          "type": "Choice",
+          "displayName": "Owner",
+          "choices": [
+            "HR",
+            "CJ",
+            "Payroll",
+            "IT",
+            "Talent",
+            "Manager"
+          ],
+          "default": "HR"
+        },
+        {
+          "internalName": "Automation",
+          "type": "Choice",
+          "displayName": "Automation",
+          "choices": [
+            "None",
+            "Approval",
+            "Resolution"
+          ],
+          "default": "None"
+        },
+        {
+          "internalName": "BlockedUntilApproved",
+          "type": "Boolean",
+          "displayName": "Blocked Until Approved",
+          "default": "0"
+        },
+        {
+          "internalName": "DueOnEffectiveDate",
+          "type": "Boolean",
+          "displayName": "Due On Effective Date",
+          "default": "0"
+        },
+        {
+          "internalName": "Active",
+          "type": "Boolean",
+          "displayName": "Active",
+          "default": "1"
+        }
+      ]
+    },
+    {
+      "title": "HR Change Types",
+      "url": "Lists/HRChangeTypes",
+      "description": "Per-change-type configuration: SLA, approval chain, notifications.",
+      "fields": [
+        {
+          "internalName": "Title",
+          "type": "Text",
+          "displayName": "Change Type"
+        },
+        {
+          "internalName": "Code",
+          "type": "Text",
+          "displayName": "Code"
+        },
+        {
+          "internalName": "DueDateRule",
+          "type": "Choice",
+          "displayName": "Due Date Rule",
+          "choices": [
+            "Business days after submission",
+            "Effective date",
+            "None"
+          ]
+        },
+        {
+          "internalName": "SLABusinessDays",
+          "type": "Number",
+          "displayName": "SLA (business days)"
+        },
+        {
+          "internalName": "SLALabel",
+          "type": "Text",
+          "displayName": "SLA Target"
+        },
+        {
+          "internalName": "ApprovalStage1",
+          "type": "Choice",
+          "displayName": "Approval Stage 1",
+          "choices": [
+            "Manager",
+            "Regional",
+            "HR",
+            "Payroll"
+          ]
+        },
+        {
+          "internalName": "ApprovalStage2",
+          "type": "Choice",
+          "displayName": "Approval Stage 2",
+          "choices": [
+            "Manager",
+            "Regional",
+            "HR",
+            "Payroll"
+          ]
+        },
+        {
+          "internalName": "ApprovalStage3",
+          "type": "Choice",
+          "displayName": "Approval Stage 3",
+          "choices": [
+            "Manager",
+            "Regional",
+            "HR",
+            "Payroll"
+          ]
+        },
+        {
+          "internalName": "DefaultAssigneeEmail",
+          "type": "Text",
+          "displayName": "Default Assignee Email"
+        },
+        {
+          "internalName": "CloseLoopEmail",
+          "type": "Boolean",
+          "displayName": "Close-the-loop Email"
+        },
+        {
+          "internalName": "PostSummaryToIntake",
+          "type": "Boolean",
+          "displayName": "Post Summary to Intake Channel"
+        },
+        {
+          "internalName": "NotifyPayrollOnResolve",
+          "type": "Boolean",
+          "displayName": "Notify Payroll on Resolve"
+        }
+      ]
+    },
+    {
+      "title": "HR Approval Matrix",
+      "url": "Lists/HRApprovalMatrix",
+      "description": "Who approves for each role. Region '*' = default for any region.",
+      "fields": [
+        {
+          "internalName": "Title",
+          "type": "Text",
+          "displayName": "Name"
+        },
+        {
+          "internalName": "Role",
+          "type": "Choice",
+          "displayName": "Role",
+          "choices": [
+            "Regional",
+            "HR",
+            "Payroll"
+          ]
+        },
+        {
+          "internalName": "Region",
+          "type": "Text",
+          "displayName": "Region",
+          "description": "Exact Region value from the request, or * for any"
+        },
+        {
+          "internalName": "ApproverEmail",
+          "type": "Text",
+          "displayName": "Approver Email"
+        },
+        {
+          "internalName": "Active",
+          "type": "Boolean",
+          "displayName": "Active",
+          "default": "1"
+        }
+      ]
+    }
+  ]
+}

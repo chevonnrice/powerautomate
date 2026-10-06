@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="hrc_RequestsList">
+  <defaultvalue>HR Change Requests</defaultvalue>
+  <description default="Title of the HR Change Requests list (system of record)">
+    <label description="Title of the HR Change Requests list (system of record)" languagecode="1033" />
+  </description>
+  <displayname default="HRC Requests List">
+    <label description="HRC Requests List" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

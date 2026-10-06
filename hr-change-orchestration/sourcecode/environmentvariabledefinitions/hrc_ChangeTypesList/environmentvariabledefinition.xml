@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="hrc_ChangeTypesList">
+  <defaultvalue>HR Change Types</defaultvalue>
+  <description default="Title of the HR Change Types list (SLA, approval chain, notifications per type)">
+    <label description="Title of the HR Change Types list (SLA, approval chain, notifications per type)" languagecode="1033" />
+  </description>
+  <displayname default="HRC Change Types List">
+    <label description="HRC Change Types List" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

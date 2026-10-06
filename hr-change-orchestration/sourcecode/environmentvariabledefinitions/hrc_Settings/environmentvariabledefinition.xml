@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="hrc_Settings">
+  <defaultvalue>{"requestPrefix":"HRC-","timeZone":"Eastern Standard Time","adminEmail":"cj@contoso.com","sendSubmitterConfirmation":true,"intakeFormUrl":"https://contoso.sharepoint.com/sites/PeopleOps/Lists/HRChangeRequests/NewForm.aspx","slack":{"intakeChannel":"&lt;channel id of the People Ops room&gt;","payrollChannel":"&lt;channel id of the Payroll team room&gt;","managersChannel":"&lt;channel id of the people-managers channel&gt;"},"payrollCutoffDays":[10,25],"cutoffReminderBusinessDays":2}</defaultvalue>
+  <description default="Slack channel ids, payroll cutoff days, time zone, admin email (see assets/hrc-settings.json)">
+    <label description="Slack channel ids, payroll cutoff days, time zone, admin email (see assets/hrc-settings.json)" languagecode="1033" />
+  </description>
+  <displayname default="HRC Settings">
+    <label description="HRC Settings" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000003</type>
+</environmentvariabledefinition>

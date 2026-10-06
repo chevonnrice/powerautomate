@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="hrc_TasksList">
+  <defaultvalue>HR Change Tasks</defaultvalue>
+  <description default="Title of the HR Change Tasks list (checklist subtasks)">
+    <label description="Title of the HR Change Tasks list (checklist subtasks)" languagecode="1033" />
+  </description>
+  <displayname default="HRC Tasks List">
+    <label description="HRC Tasks List" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

@@ -1,0 +1,471 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_SharePoint"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Office365Outlook"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_slack": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Slack"
+        },
+        "api": {
+          "name": "shared_slack"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "HRC SharePoint Site (hrc_SPSite)": {
+          "defaultValue": "https://contoso.sharepoint.com/sites/PeopleOps",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_SPSite"
+          }
+        },
+        "HRC Requests List (hrc_RequestsList)": {
+          "defaultValue": "HR Change Requests",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_RequestsList"
+          }
+        },
+        "HRC Tasks List (hrc_TasksList)": {
+          "defaultValue": "HR Change Tasks",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TasksList"
+          }
+        },
+        "HRC Templates List (hrc_TemplatesList)": {
+          "defaultValue": "HR Change Templates",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TemplatesList"
+          }
+        },
+        "HRC Change Types List (hrc_ChangeTypesList)": {
+          "defaultValue": "HR Change Types",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ChangeTypesList"
+          }
+        },
+        "HRC Approval Matrix List (hrc_ApprovalMatrixList)": {
+          "defaultValue": "HR Approval Matrix",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ApprovalMatrixList"
+          }
+        },
+        "HRC Settings (hrc_Settings)": {
+          "defaultValue": {
+            "requestPrefix": "HRC-",
+            "timeZone": "Eastern Standard Time",
+            "adminEmail": "cj@contoso.com",
+            "sendSubmitterConfirmation": true,
+            "intakeFormUrl": "https://contoso.sharepoint.com/sites/PeopleOps/Lists/HRChangeRequests/NewForm.aspx",
+            "slack": {
+              "intakeChannel": "<channel id of the People Ops room>",
+              "payrollChannel": "<channel id of the Payroll team room>",
+              "managersChannel": "<channel id of the people-managers channel>"
+            },
+            "payrollCutoffDays": [
+              10,
+              25
+            ],
+            "cutoffReminderBusinessDays": 2
+          },
+          "type": "Object",
+          "metadata": {
+            "schemaName": "hrc_Settings"
+          }
+        }
+      },
+      "triggers": {
+        "When_an_HR_change_request_is_created": {
+          "recurrence": {
+            "interval": 1,
+            "frequency": "Minute"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnNewItems",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+              "table": "@parameters('HRC Requests List (hrc_RequestsList)')"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Initialize_Settings": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Settings",
+                "type": "object",
+                "value": "@parameters('HRC Settings (hrc_Settings)')"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Try": {
+          "type": "Scope",
+          "actions": {
+            "Get_change_type_config": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Change Types List (hrc_ChangeTypesList)')",
+                  "$filter": "Title eq '@{triggerOutputs()?['body/ChangeType']?['Value']}'",
+                  "$top": 1
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "description": "Per-change-type settings (SLA, approval chain, notifications) are data in the HR Change Types list, so HR can change them without editing flows.",
+              "runAfter": {}
+            },
+            "Compose_Change_Type_Config": {
+              "type": "Compose",
+              "inputs": "@first(outputs('Get_change_type_config')?['body/value'])",
+              "runAfter": {
+                "Get_change_type_config": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_SLA_Business_Day_Math": {
+              "type": "Compose",
+              "inputs": {
+                "start": "@addDays(startOfDay(convertFromUtc(triggerOutputs()?['body/Created'], variables('Settings')?['timeZone'])), if(equals(dayOfWeek(startOfDay(convertFromUtc(triggerOutputs()?['body/Created'], variables('Settings')?['timeZone']))), 6), 2, if(equals(dayOfWeek(startOfDay(convertFromUtc(triggerOutputs()?['body/Created'], variables('Settings')?['timeZone']))), 0), 1, 0)))",
+                "n": "@int(coalesce(outputs('Compose_Change_Type_Config')?['SLABusinessDays'], 0))"
+              },
+              "description": "Weekend submissions start counting on Monday. Holidays are not excluded.",
+              "runAfter": {
+                "Compose_Change_Type_Config": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_SLA_Due_Date": {
+              "type": "Compose",
+              "inputs": "@if(equals(outputs('Compose_Change_Type_Config')?['DueDateRule']?['Value'], 'Effective date'), formatDateTime(coalesce(triggerOutputs()?['body/LastDay'], triggerOutputs()?['body/EffectiveDate']), 'yyyy-MM-dd'), if(or(empty(outputs('Compose_Change_Type_Config')), equals(outputs('Compose_Change_Type_Config')?['DueDateRule']?['Value'], 'None'), equals(outputs('Compose_SLA_Business_Day_Math')?['n'], 0)), null, formatDateTime(addDays(outputs('Compose_SLA_Business_Day_Math')?['start'], add(add(mul(div(outputs('Compose_SLA_Business_Day_Math')?['n'], 5), 7), mod(outputs('Compose_SLA_Business_Day_Math')?['n'], 5)), if(greater(add(dayOfWeek(outputs('Compose_SLA_Business_Day_Math')?['start']), mod(outputs('Compose_SLA_Business_Day_Math')?['n'], 5)), 5), 2, 0))), 'yyyy-MM-dd')))",
+              "description": "SLA = submission + N business days (HR Change Types list), or the effective date / last day for offboarding, or none (LOA - per policy).",
+              "runAfter": {
+                "Compose_SLA_Business_Day_Math": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_Pay_Period": {
+              "type": "Compose",
+              "inputs": {
+                "date": "@coalesce(triggerOutputs()?['body/StartDate'], triggerOutputs()?['body/EffectiveDate'], utcNow())"
+              },
+              "runAfter": {
+                "Compose_SLA_Due_Date": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_Pay_Period_Info": {
+              "type": "Compose",
+              "inputs": {
+                "label": "@concat(formatDateTime(outputs('Compose_Pay_Period')?['date'], 'yyyy-MM'), if(lessOrEquals(dayOfMonth(outputs('Compose_Pay_Period')?['date']), 15), ' (1-15)', ' (16-EOM)'))",
+                "cutoff": "@addDays(startOfMonth(outputs('Compose_Pay_Period')?['date']), sub(int(if(lessOrEquals(dayOfMonth(outputs('Compose_Pay_Period')?['date']), 15), first(variables('Settings')?['payrollCutoffDays']), last(variables('Settings')?['payrollCutoffDays']))), 1))"
+              },
+              "description": "Semi-monthly pay periods. The cutoff day for each half comes from settings.payrollCutoffDays.",
+              "runAfter": {
+                "Compose_Pay_Period": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_Is_Extra_Shift": {
+              "type": "Compose",
+              "inputs": "@equals(outputs('Compose_Change_Type_Config')?['Code'], 'I')",
+              "runAfter": {
+                "Compose_Pay_Period_Info": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Update_request_-_id_title_SLA": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Requests List (hrc_RequestsList)')",
+                  "id": "@triggerOutputs()?['body/ID']",
+                  "item/Title": "@{triggerOutputs()?['body/ChangeType']?['Value']} — @{triggerOutputs()?['body/EmployeeName']}",
+                  "item/RequestId": "@concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000'))",
+                  "item/SLADueDate": "@outputs('Compose_SLA_Due_Date')",
+                  "item/RequestedBy/Claims": "@coalesce(triggerOutputs()?['body/RequestedBy']?['Email'], triggerOutputs()?['body/Author']?['Email'])",
+                  "item/PayPeriod": "@if(outputs('Compose_Is_Extra_Shift'), outputs('Compose_Pay_Period_Info')?['label'], '')",
+                  "item/AfterCutoff": "@and(outputs('Compose_Is_Extra_Shift'), greater(ticks(convertFromUtc(triggerOutputs()?['body/Created'], variables('Settings')?['timeZone'])), ticks(addDays(outputs('Compose_Pay_Period_Info')?['cutoff'], 1))))"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "description": "Request = '[Change Type] — [Employee Name]', Request ID auto-generated (HRC-000123). Status / ApprovalStatus / task counts are owned by flows 2-3 (column defaults cover the start), so the three create-triggered flows never overwrite each other.",
+              "runAfter": {
+                "Compose_Is_Extra_Shift": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Condition_-_default_assignee": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@empty(triggerOutputs()?['body/Assignee'])",
+                      true
+                    ]
+                  },
+                  {
+                    "not": {
+                      "equals": [
+                        "@empty(coalesce(outputs('Compose_Change_Type_Config')?['DefaultAssigneeEmail'], ''))",
+                        true
+                      ]
+                    }
+                  }
+                ]
+              },
+              "actions": {
+                "Set_default_assignee": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PatchItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                      "table": "@parameters('HRC Requests List (hrc_RequestsList)')",
+                      "id": "@triggerOutputs()?['body/ID']",
+                      "item/Title": "@{triggerOutputs()?['body/ChangeType']?['Value']} — @{triggerOutputs()?['body/EmployeeName']}",
+                      "item/Assignee/Claims": "@outputs('Compose_Change_Type_Config')?['DefaultAssigneeEmail']"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "description": "Status stays 0-New until someone picks the case up (1-Assigned), keeping the Tag, You're It meaning.",
+                  "runAfter": {}
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Update_request_-_id_title_SLA": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_intake_comment": {
+              "type": "Compose",
+              "inputs": {
+                "text": "📥 @{concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000'))} received from @{coalesce(triggerOutputs()?['body/RequestedBy']?['DisplayName'], triggerOutputs()?['body/Author']?['DisplayName'])}. SLA due: @{coalesce(outputs('Compose_SLA_Due_Date'), 'per policy')}.@{if(and(outputs('Compose_Is_Extra_Shift'), greater(ticks(convertFromUtc(triggerOutputs()?['body/Created'], variables('Settings')?['timeZone'])), ticks(addDays(outputs('Compose_Pay_Period_Info')?['cutoff'], 1)))), concat(' ⚠️ Submitted after the payroll cutoff for ', outputs('Compose_Pay_Period_Info')?['label'], '.'), '')}"
+              },
+              "runAfter": {
+                "Condition_-_default_assignee": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Post_intake_comment": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "parameters/method": "POST",
+                  "parameters/uri": "_api/web/lists/getbytitle('@{parameters('HRC Requests List (hrc_RequestsList)')}')/items(@{triggerOutputs()?['body/ID']})/Comments",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata",
+                    "Content-Type": "application/json;odata=nometadata"
+                  },
+                  "parameters/body": "@{string(outputs('Compose_intake_comment'))}"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "description": "Item comments are the case work log (replaces the Slack List item thread).",
+              "runAfter": {
+                "Compose_intake_comment": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Post_to_People_Ops_channel": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_slack",
+                  "operationId": "PostMessageV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack"
+                },
+                "parameters": {
+                  "postMessageRequest/channel": "@variables('Settings')?['slack']?['intakeChannel']",
+                  "postMessageRequest/text": ":inbox_tray: New HR change request *<@{triggerOutputs()?['body/{Link}']}|@{concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000'))}>*\n*@{triggerOutputs()?['body/ChangeType']?['Value']}* — @{triggerOutputs()?['body/EmployeeName']} (@{triggerOutputs()?['body/EmployeeId']})\nEffective: @{formatDateTime(triggerOutputs()?['body/EffectiveDate'], 'MMM d, yyyy')}  •  SLA due: @{coalesce(outputs('Compose_SLA_Due_Date'), 'per policy')}\nSubmitted by @{coalesce(triggerOutputs()?['body/RequestedBy']?['DisplayName'], triggerOutputs()?['body/Author']?['DisplayName'])}"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "description": "Flow 1 'Intake Notification' — the ping to the People Ops room.",
+              "runAfter": {
+                "Post_intake_comment": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Condition_-_confirm_to_submitter": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@variables('Settings')?['sendSubmitterConfirmation']",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Send_confirmation_to_submitter": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_office365",
+                      "operationId": "SendEmailV2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                    },
+                    "parameters": {
+                      "emailMessage/To": "@coalesce(triggerOutputs()?['body/RequestedBy']?['Email'], triggerOutputs()?['body/Author']?['Email'])",
+                      "emailMessage/Subject": "Received: @{triggerOutputs()?['body/ChangeType']?['Value']} for @{triggerOutputs()?['body/EmployeeName']} [@{concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000'))}]",
+                      "emailMessage/Body": "<p>Thanks — your HR change request <b>@{concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000'))}</b> (@{triggerOutputs()?['body/ChangeType']?['Value']} for @{triggerOutputs()?['body/EmployeeName']}) has been received.</p><p>Target completion: <b>@{coalesce(outputs('Compose_SLA_Due_Date'), 'per policy')}</b>.</p><p><a href=\"@{triggerOutputs()?['body/{Link}']}\">Track the request</a></p><p>People Ops</p>",
+                      "emailMessage/Importance": "Normal"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {}
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Post_to_People_Ops_channel": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_Settings": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Catch": {
+          "type": "Scope",
+          "runAfter": {
+            "Try": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "description": "Catch: alert the admin with a link to the failed run.",
+          "actions": {
+            "Send_failure_alert": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "@variables('Settings')?['adminEmail']",
+                  "emailMessage/Subject": "[HR Change] HR Change - 1 Intake failed",
+                  "emailMessage/Body": "<p>The <b>HR Change - 1 Intake</b> flow failed.</p><p><a href=\"@{concat('https://make.powerautomate.com/environments/', workflow()?['tags']?['environmentName'], '/flows/', workflow()?['name'], '/runs/', workflow()?['run']?['name'])}\">Open the failed run</a></p>",
+                  "emailMessage/Importance": "High"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {}
+            },
+            "Terminate_as_failed": {
+              "runAfter": {
+                "Send_failure_alert": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "HRChangeFlowFailed",
+                  "message": "HR Change - 1 Intake failed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

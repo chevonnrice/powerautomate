@@ -1,0 +1,749 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_SharePoint"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Office365Outlook"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_slack": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Slack"
+        },
+        "api": {
+          "name": "shared_slack"
+        }
+      },
+      "shared_approvals": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Approvals"
+        },
+        "api": {
+          "name": "shared_approvals"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "HRC SharePoint Site (hrc_SPSite)": {
+          "defaultValue": "https://contoso.sharepoint.com/sites/PeopleOps",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_SPSite"
+          }
+        },
+        "HRC Requests List (hrc_RequestsList)": {
+          "defaultValue": "HR Change Requests",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_RequestsList"
+          }
+        },
+        "HRC Tasks List (hrc_TasksList)": {
+          "defaultValue": "HR Change Tasks",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TasksList"
+          }
+        },
+        "HRC Templates List (hrc_TemplatesList)": {
+          "defaultValue": "HR Change Templates",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TemplatesList"
+          }
+        },
+        "HRC Change Types List (hrc_ChangeTypesList)": {
+          "defaultValue": "HR Change Types",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ChangeTypesList"
+          }
+        },
+        "HRC Approval Matrix List (hrc_ApprovalMatrixList)": {
+          "defaultValue": "HR Approval Matrix",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ApprovalMatrixList"
+          }
+        },
+        "HRC Settings (hrc_Settings)": {
+          "defaultValue": {
+            "requestPrefix": "HRC-",
+            "timeZone": "Eastern Standard Time",
+            "adminEmail": "cj@contoso.com",
+            "sendSubmitterConfirmation": true,
+            "intakeFormUrl": "https://contoso.sharepoint.com/sites/PeopleOps/Lists/HRChangeRequests/NewForm.aspx",
+            "slack": {
+              "intakeChannel": "<channel id of the People Ops room>",
+              "payrollChannel": "<channel id of the Payroll team room>",
+              "managersChannel": "<channel id of the people-managers channel>"
+            },
+            "payrollCutoffDays": [
+              10,
+              25
+            ],
+            "cutoffReminderBusinessDays": 2
+          },
+          "type": "Object",
+          "metadata": {
+            "schemaName": "hrc_Settings"
+          }
+        }
+      },
+      "triggers": {
+        "When_an_HR_change_request_is_created": {
+          "recurrence": {
+            "interval": 1,
+            "frequency": "Minute"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnNewItems",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+              "table": "@parameters('HRC Requests List (hrc_RequestsList)')"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Initialize_Settings": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Settings",
+                "type": "object",
+                "value": "@parameters('HRC Settings (hrc_Settings)')"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Initialize_Outcome": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Outcome",
+                "type": "string",
+                "value": "Approved"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_Settings": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_ApprovalHistory": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "ApprovalHistory",
+                "type": "string",
+                "value": ""
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_Outcome": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Try": {
+          "type": "Scope",
+          "actions": {
+            "Get_change_type_config": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Change Types List (hrc_ChangeTypesList)')",
+                  "$filter": "Title eq '@{triggerOutputs()?['body/ChangeType']?['Value']}'",
+                  "$top": 1
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "description": "Per-change-type settings (SLA, approval chain, notifications) are data in the HR Change Types list, so HR can change them without editing flows.",
+              "runAfter": {}
+            },
+            "Compose_Change_Type_Config": {
+              "type": "Compose",
+              "inputs": "@first(outputs('Get_change_type_config')?['body/value'])",
+              "runAfter": {
+                "Get_change_type_config": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_approval_stages": {
+              "type": "Query",
+              "inputs": {
+                "from": "@createArray(outputs('Compose_Change_Type_Config')?['ApprovalStage1']?['Value'], outputs('Compose_Change_Type_Config')?['ApprovalStage2']?['Value'], outputs('Compose_Change_Type_Config')?['ApprovalStage3']?['Value'])",
+                "where": "@not(empty(item()))"
+              },
+              "description": "Approval chain per change type, in order (e.g. C — Comp: Manager → Regional → HR).",
+              "runAfter": {
+                "Compose_Change_Type_Config": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Condition_-_approvals_required": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "greater": [
+                      "@length(body('Filter_approval_stages'))",
+                      0
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Apply_to_each_approval_stage": {
+                  "type": "Foreach",
+                  "foreach": "@body('Filter_approval_stages')",
+                  "actions": {
+                    "Condition_-_still_approved": {
+                      "type": "If",
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('Outcome')",
+                              "Approved"
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "Get_approval_matrix_rows": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "GetItems",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                              "table": "@parameters('HRC Approval Matrix List (hrc_ApprovalMatrixList)')",
+                              "$filter": "Role eq '@{items('Apply_to_each_approval_stage')}' and Active eq 1",
+                              "$top": 100
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          },
+                          "runAfter": {}
+                        },
+                        "Filter_matrix_-_this_region": {
+                          "type": "Query",
+                          "inputs": {
+                            "from": "@outputs('Get_approval_matrix_rows')?['body/value']",
+                            "where": "@equals(toLower(trim(coalesce(item()?['Region'], ''))), toLower(trim(coalesce(triggerOutputs()?['body/Region']?['Value'], ''))))"
+                          },
+                          "runAfter": {
+                            "Get_approval_matrix_rows": [
+                              "Succeeded"
+                            ]
+                          }
+                        },
+                        "Filter_matrix_-_any_region": {
+                          "type": "Query",
+                          "inputs": {
+                            "from": "@outputs('Get_approval_matrix_rows')?['body/value']",
+                            "where": "@equals(trim(coalesce(item()?['Region'], '')), '*')"
+                          },
+                          "runAfter": {
+                            "Filter_matrix_-_this_region": [
+                              "Succeeded"
+                            ]
+                          }
+                        },
+                        "Compose_Approver": {
+                          "type": "Compose",
+                          "inputs": "@if(equals(items('Apply_to_each_approval_stage'), 'Manager'), coalesce(triggerOutputs()?['body/Manager']?['Email'], ''), coalesce(first(body('Filter_matrix_-_this_region'))?['ApproverEmail'], first(body('Filter_matrix_-_any_region'))?['ApproverEmail'], ''))",
+                          "description": "Manager comes from the request's Manager field; Regional / HR / Payroll come from the HR Approval Matrix (region match first, then '*').",
+                          "runAfter": {
+                            "Filter_matrix_-_any_region": [
+                              "Succeeded"
+                            ]
+                          }
+                        },
+                        "Condition_-_approver_found": {
+                          "type": "If",
+                          "expression": {
+                            "and": [
+                              {
+                                "equals": [
+                                  "@empty(outputs('Compose_Approver'))",
+                                  false
+                                ]
+                              }
+                            ]
+                          },
+                          "actions": {
+                            "Update_request_-_waiting_on_approver": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "host": {
+                                  "connectionName": "shared_sharepointonline",
+                                  "operationId": "PatchItem",
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                },
+                                "parameters": {
+                                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                                  "table": "@parameters('HRC Requests List (hrc_RequestsList)')",
+                                  "id": "@triggerOutputs()?['body/ID']",
+                                  "item/Title": "@{triggerOutputs()?['body/ChangeType']?['Value']} — @{triggerOutputs()?['body/EmployeeName']}",
+                                  "item/Status/Value": "2-Waiting",
+                                  "item/ApprovalStatus/Value": "Pending",
+                                  "item/CurrentApprover": "@{items('Apply_to_each_approval_stage')}: @{outputs('Compose_Approver')}"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                              },
+                              "runAfter": {}
+                            },
+                            "Compose_waiting_comment": {
+                              "type": "Compose",
+                              "inputs": {
+                                "text": "⏳ Waiting on @{items('Apply_to_each_approval_stage')} approval from @{outputs('Compose_Approver')}."
+                              },
+                              "runAfter": {
+                                "Update_request_-_waiting_on_approver": [
+                                  "Succeeded"
+                                ]
+                              }
+                            },
+                            "Post_waiting_comment": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "host": {
+                                  "connectionName": "shared_sharepointonline",
+                                  "operationId": "HttpRequest",
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                },
+                                "parameters": {
+                                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                                  "parameters/method": "POST",
+                                  "parameters/uri": "_api/web/lists/getbytitle('@{parameters('HRC Requests List (hrc_RequestsList)')}')/items(@{triggerOutputs()?['body/ID']})/Comments",
+                                  "parameters/headers": {
+                                    "Accept": "application/json;odata=nometadata",
+                                    "Content-Type": "application/json;odata=nometadata"
+                                  },
+                                  "parameters/body": "@{string(outputs('Compose_waiting_comment'))}"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                              },
+                              "description": "Item comments are the case work log (replaces the Slack List item thread).",
+                              "runAfter": {
+                                "Compose_waiting_comment": [
+                                  "Succeeded"
+                                ]
+                              }
+                            },
+                            "Start_and_wait_for_an_approval": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "host": {
+                                  "connectionName": "shared_approvals",
+                                  "operationId": "StartAndWaitForAnApproval",
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals"
+                                },
+                                "parameters": {
+                                  "approvalType": "Basic",
+                                  "WebhookApprovalCreationInput/title": "@{items('Apply_to_each_approval_stage')} approval: @{triggerOutputs()?['body/ChangeType']?['Value']} — @{triggerOutputs()?['body/EmployeeName']} [@{concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000'))}]",
+                                  "WebhookApprovalCreationInput/assignedTo": "@outputs('Compose_Approver')",
+                                  "WebhookApprovalCreationInput/details": "@{concat('**Request:** ', concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000')), decodeUriComponent('%0A'), decodeUriComponent('%0A'), '**Employee:** ', triggerOutputs()?['body/EmployeeName'], ' (', triggerOutputs()?['body/EmployeeId'], ')', decodeUriComponent('%0A'), decodeUriComponent('%0A'), '**Change type:** ', triggerOutputs()?['body/ChangeType']?['Value'], decodeUriComponent('%0A'), decodeUriComponent('%0A'), '**Effective date:** ', formatDateTime(triggerOutputs()?['body/EffectiveDate'], 'MMM d, yyyy'), decodeUriComponent('%0A'), decodeUriComponent('%0A'), '**Requested by:** ', coalesce(triggerOutputs()?['body/RequestedBy']?['DisplayName'], triggerOutputs()?['body/Author']?['DisplayName']), decodeUriComponent('%0A'), decodeUriComponent('%0A'), '**Approval step:** ', items('Apply_to_each_approval_stage'), decodeUriComponent('%0A'), decodeUriComponent('%0A'), concat(if(empty(triggerOutputs()?['body/LastDay']), '', concat('- Last day: ', formatDateTime(triggerOutputs()?['body/LastDay'], 'MMM d, yyyy'), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/SeparationReason']?['Value']), '', concat('- Separation reason: ', triggerOutputs()?['body/SeparationReason']?['Value'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/EquipmentToRetrieve']), '', concat('- Equipment to retrieve: ', triggerOutputs()?['body/EquipmentToRetrieve'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/FinalPayType']), '', concat('- Final pay type: ', triggerOutputs()?['body/FinalPayType'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/NewTitle']), '', concat('- New title: ', triggerOutputs()?['body/NewTitle'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/NewDepartment']), '', concat('- New department: ', triggerOutputs()?['body/NewDepartment'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/NewLocation']), '', concat('- New location: ', triggerOutputs()?['body/NewLocation'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/EmploymentStatus']?['Value']), '', concat('- FT/PT/PRN: ', triggerOutputs()?['body/EmploymentStatus']?['Value'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/NewRate']), '', concat('- New rate: ', string(triggerOutputs()?['body/NewRate']), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/EffectivePayPeriod']), '', concat('- Effective pay period: ', triggerOutputs()?['body/EffectivePayPeriod'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/PayChangeType']?['Value']), '', concat('- Pay/banking change: ', triggerOutputs()?['body/PayChangeType']?['Value'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/VerificationAttached']), '', concat('- Verification attached: ', if(equals(triggerOutputs()?['body/VerificationAttached'], true), 'Yes', 'No'), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/FieldsChanging']), '', concat('- Field(s) changing: ', triggerOutputs()?['body/FieldsChanging'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/NewValue']), '', concat('- New value: ', triggerOutputs()?['body/NewValue'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/TimeRequestType']?['Value']), '', concat('- Time request type: ', triggerOutputs()?['body/TimeRequestType']?['Value'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/LeaveType']?['Value']), '', concat('- Leave type: ', triggerOutputs()?['body/LeaveType']?['Value'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/StartDate']), '', concat('- Start / first date worked: ', formatDateTime(triggerOutputs()?['body/StartDate'], 'MMM d, yyyy'), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/EndDate']), '', concat('- End / expected return: ', formatDateTime(triggerOutputs()?['body/EndDate'], 'MMM d, yyyy'), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/Hours']), '', concat('- Hours: ', string(triggerOutputs()?['body/Hours']), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/LifeEventType']?['Value']), '', concat('- Life event: ', triggerOutputs()?['body/LifeEventType']?['Value'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/QualifyingDate']), '', concat('- Qualifying date: ', formatDateTime(triggerOutputs()?['body/QualifyingDate'], 'MMM d, yyyy'), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/DocumentationAttached']), '', concat('- Documentation attached: ', if(equals(triggerOutputs()?['body/DocumentationAttached'], true), 'Yes', 'No'), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/DatesWorked']), '', concat('- Dates worked: ', triggerOutputs()?['body/DatesWorked'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/ShiftType']?['Value']), '', concat('- Shift type: ', triggerOutputs()?['body/ShiftType']?['Value'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/RateType']?['Value']), '', concat('- Rate type: ', triggerOutputs()?['body/RateType']?['Value'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/RateAmount']), '', concat('- Rate amount: ', string(triggerOutputs()?['body/RateAmount']), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/HoursOrDays']), '', concat('- Hours or days: ', string(triggerOutputs()?['body/HoursOrDays']), decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/PayPeriod']), '', concat('- Pay period: ', triggerOutputs()?['body/PayPeriod'], decodeUriComponent('%0A'))), if(empty(triggerOutputs()?['body/AfterCutoff']), '', concat('- Submitted after cutoff: ', if(equals(triggerOutputs()?['body/AfterCutoff'], true), 'Yes', 'No'), decodeUriComponent('%0A')))), decodeUriComponent('%0A'), if(empty(triggerOutputs()?['body/Notes']), '', concat('**Notes:** ', triggerOutputs()?['body/Notes'])))}",
+                                  "WebhookApprovalCreationInput/itemLink": "@triggerOutputs()?['body/{Link}']",
+                                  "WebhookApprovalCreationInput/itemLinkDescription": "Open @{concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000'))}",
+                                  "WebhookApprovalCreationInput/enableNotifications": true,
+                                  "WebhookApprovalCreationInput/enableReassignment": true
+                                },
+                                "authentication": "@parameters('$authentication')"
+                              },
+                              "description": "Approvers respond from the email, the Power Automate app, or Teams (in-Slack buttons need the Phase 3 bot token).",
+                              "limit": {
+                                "timeout": "P30D"
+                              },
+                              "runAfter": {
+                                "Post_waiting_comment": [
+                                  "Succeeded"
+                                ]
+                              }
+                            },
+                            "Append_approval_history": {
+                              "type": "AppendToStringVariable",
+                              "inputs": {
+                                "name": "ApprovalHistory",
+                                "value": "@{concat(items('Apply_to_each_approval_stage'), ': ', if(equals(outputs('Start_and_wait_for_an_approval')?['body/outcome'], 'Approve'), 'Approved', 'Rejected'), ' by ', coalesce(first(outputs('Start_and_wait_for_an_approval')?['body/responses'])?['responder']?['displayName'], first(outputs('Start_and_wait_for_an_approval')?['body/responses'])?['responder']?['email'], ''), ' on ', formatDateTime(convertFromUtc(coalesce(first(outputs('Start_and_wait_for_an_approval')?['body/responses'])?['responseDate'], utcNow()), variables('Settings')?['timeZone']), 'MMM d, yyyy h:mm tt'), if(empty(first(outputs('Start_and_wait_for_an_approval')?['body/responses'])?['comments']), '', concat(' — \"', first(outputs('Start_and_wait_for_an_approval')?['body/responses'])?['comments'], '\"')), decodeUriComponent('%0A'))}"
+                              },
+                              "runAfter": {
+                                "Start_and_wait_for_an_approval": [
+                                  "Succeeded"
+                                ]
+                              }
+                            },
+                            "Compose_decision_comment": {
+                              "type": "Compose",
+                              "inputs": {
+                                "text": "@{if(equals(outputs('Start_and_wait_for_an_approval')?['body/outcome'], 'Approve'), '👍', '👎')} @{items('Apply_to_each_approval_stage')} @{if(equals(outputs('Start_and_wait_for_an_approval')?['body/outcome'], 'Approve'), 'approved', 'rejected')} by @{coalesce(first(outputs('Start_and_wait_for_an_approval')?['body/responses'])?['responder']?['displayName'], '')}@{if(empty(first(outputs('Start_and_wait_for_an_approval')?['body/responses'])?['comments']), '', concat(': ', first(outputs('Start_and_wait_for_an_approval')?['body/responses'])?['comments']))}"
+                              },
+                              "runAfter": {
+                                "Append_approval_history": [
+                                  "Succeeded"
+                                ]
+                              }
+                            },
+                            "Post_decision_comment": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "host": {
+                                  "connectionName": "shared_sharepointonline",
+                                  "operationId": "HttpRequest",
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                },
+                                "parameters": {
+                                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                                  "parameters/method": "POST",
+                                  "parameters/uri": "_api/web/lists/getbytitle('@{parameters('HRC Requests List (hrc_RequestsList)')}')/items(@{triggerOutputs()?['body/ID']})/Comments",
+                                  "parameters/headers": {
+                                    "Accept": "application/json;odata=nometadata",
+                                    "Content-Type": "application/json;odata=nometadata"
+                                  },
+                                  "parameters/body": "@{string(outputs('Compose_decision_comment'))}"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                              },
+                              "description": "Item comments are the case work log (replaces the Slack List item thread).",
+                              "runAfter": {
+                                "Compose_decision_comment": [
+                                  "Succeeded"
+                                ]
+                              }
+                            },
+                            "Condition_-_rejected": {
+                              "type": "If",
+                              "expression": {
+                                "and": [
+                                  {
+                                    "equals": [
+                                      "@outputs('Start_and_wait_for_an_approval')?['body/outcome']",
+                                      "Reject"
+                                    ]
+                                  }
+                                ]
+                              },
+                              "actions": {
+                                "Set_Outcome_-_rejected": {
+                                  "type": "SetVariable",
+                                  "inputs": {
+                                    "name": "Outcome",
+                                    "value": "Rejected"
+                                  },
+                                  "runAfter": {}
+                                }
+                              },
+                              "else": {
+                                "actions": {}
+                              },
+                              "runAfter": {
+                                "Post_decision_comment": [
+                                  "Succeeded"
+                                ]
+                              }
+                            }
+                          },
+                          "else": {
+                            "actions": {
+                              "Set_Outcome_-_no_approver": {
+                                "type": "SetVariable",
+                                "inputs": {
+                                  "name": "Outcome",
+                                  "value": "NoApprover"
+                                },
+                                "runAfter": {}
+                              },
+                              "Alert_-_no_approver": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "host": {
+                                    "connectionName": "shared_slack",
+                                    "operationId": "PostMessageV2",
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack"
+                                  },
+                                  "parameters": {
+                                    "postMessageRequest/channel": "@variables('Settings')?['slack']?['intakeChannel']",
+                                    "postMessageRequest/text": ":rotating_light: *<@{triggerOutputs()?['body/{Link}']}|@{concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000'))}>* needs a *@{items('Apply_to_each_approval_stage')}* approver but none was found (Manager field empty, or no HR Approval Matrix row for region '@{coalesce(triggerOutputs()?['body/Region']?['Value'], '-')}')."
+                                  },
+                                  "authentication": "@parameters('$authentication')"
+                                },
+                                "runAfter": {
+                                  "Set_Outcome_-_no_approver": [
+                                    "Succeeded"
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          "runAfter": {
+                            "Compose_Approver": [
+                              "Succeeded"
+                            ]
+                          }
+                        }
+                      },
+                      "else": {
+                        "actions": {}
+                      },
+                      "description": "Stops the chain at the first rejection.",
+                      "runAfter": {}
+                    }
+                  },
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "repetitions": 1
+                    }
+                  },
+                  "description": "Sequential: each stage only starts after the previous one approves.",
+                  "runAfter": {}
+                },
+                "Get_request_after_approvals": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "GetItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                      "table": "@parameters('HRC Requests List (hrc_RequestsList)')",
+                      "id": "@triggerOutputs()?['body/ID']"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {
+                    "Apply_to_each_approval_stage": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Update_request_-_approval_result": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PatchItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                      "table": "@parameters('HRC Requests List (hrc_RequestsList)')",
+                      "id": "@triggerOutputs()?['body/ID']",
+                      "item/Title": "@outputs('Get_request_after_approvals')?['body/Title']",
+                      "item/ApprovalStatus/Value": "@if(equals(variables('Outcome'), 'Approved'), 'Approved', if(equals(variables('Outcome'), 'Rejected'), 'Rejected', 'Needs approver'))",
+                      "item/Status/Value": "@if(equals(variables('Outcome'), 'Rejected'), '3-Resolved', if(equals(variables('Outcome'), 'NoApprover'), '2-Waiting', if(empty(outputs('Get_request_after_approvals')?['body/Assignee']?['Email']), '0-New', '1-Assigned')))",
+                      "item/Outcome/Value": "@if(equals(variables('Outcome'), 'Rejected'), 'Rejected', outputs('Get_request_after_approvals')?['body/Outcome']?['Value'])",
+                      "item/CurrentApprover": "",
+                      "item/ApprovalHistory": "@variables('ApprovalHistory')"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "description": "Approved → back to the owner (1-Assigned). Rejected → 3-Resolved with Outcome = Rejected, which makes the Resolution flow tell the requester.",
+                  "runAfter": {
+                    "Get_request_after_approvals": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Condition_-_decision_made": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "not": {
+                          "equals": [
+                            "@variables('Outcome')",
+                            "NoApprover"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Get_gated_tasks": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "GetItems",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                          "table": "@parameters('HRC Tasks List (hrc_TasksList)')",
+                          "$filter": "RequestId eq '@{concat(variables('Settings')?['requestPrefix'], formatNumber(triggerOutputs()?['body/ID'], '000000'))}' and (TaskStatus eq 'Blocked - awaiting approval' or Automation eq 'Approval')",
+                          "$top": 200
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      },
+                      "runAfter": {}
+                    },
+                    "Apply_to_each_gated_task": {
+                      "type": "Foreach",
+                      "foreach": "@outputs('Get_gated_tasks')?['body/value']",
+                      "actions": {
+                        "Update_gated_task": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "PatchItem",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                              "table": "@parameters('HRC Tasks List (hrc_TasksList)')",
+                              "id": "@items('Apply_to_each_gated_task')?['ID']",
+                              "item/Title": "@items('Apply_to_each_gated_task')?['Title']",
+                              "item/TaskStatus/Value": "@if(equals(items('Apply_to_each_gated_task')?['Automation']?['Value'], 'Approval'), 'Done', if(equals(variables('Outcome'), 'Approved'), 'Not started', 'Cancelled'))"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          },
+                          "description": "'Route approval' steps tick themselves; 'On approval: ...' steps unlock (or are cancelled on rejection).",
+                          "runAfter": {}
+                        }
+                      },
+                      "runtimeConfiguration": {
+                        "concurrency": {
+                          "repetitions": 1
+                        }
+                      },
+                      "runAfter": {
+                        "Get_gated_tasks": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "runAfter": {
+                    "Update_request_-_approval_result": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Filter_approval_stages": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_ApprovalHistory": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Catch": {
+          "type": "Scope",
+          "runAfter": {
+            "Try": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "description": "Catch: alert the admin with a link to the failed run.",
+          "actions": {
+            "Send_failure_alert": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "@variables('Settings')?['adminEmail']",
+                  "emailMessage/Subject": "[HR Change] HR Change - 3 Approvals failed",
+                  "emailMessage/Body": "<p>The <b>HR Change - 3 Approvals</b> flow failed.</p><p><a href=\"@{concat('https://make.powerautomate.com/environments/', workflow()?['tags']?['environmentName'], '/flows/', workflow()?['name'], '/runs/', workflow()?['run']?['name'])}\">Open the failed run</a></p>",
+                  "emailMessage/Importance": "High"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {}
+            },
+            "Terminate_as_failed": {
+              "runAfter": {
+                "Send_failure_alert": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "HRChangeFlowFailed",
+                  "message": "HR Change - 3 Approvals failed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

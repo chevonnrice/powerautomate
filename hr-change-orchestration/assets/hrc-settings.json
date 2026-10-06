@@ -1,0 +1,14 @@
+{
+  "requestPrefix": "HRC-",
+  "timeZone": "Eastern Standard Time",
+  "adminEmail": "cj@contoso.com",
+  "sendSubmitterConfirmation": true,
+  "intakeFormUrl": "https://contoso.sharepoint.com/sites/PeopleOps/Lists/HRChangeRequests/NewForm.aspx",
+  "slack": {
+    "intakeChannel": "<channel id of the People Ops room>",
+    "payrollChannel": "<channel id of the Payroll team room>",
+    "managersChannel": "<channel id of the people-managers channel>"
+  },
+  "payrollCutoffDays": [10, 25],
+  "cutoffReminderBusinessDays": 2
+}

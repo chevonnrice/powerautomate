@@ -1,0 +1,458 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_SharePoint"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Office365Outlook"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_slack": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Slack"
+        },
+        "api": {
+          "name": "shared_slack"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "HRC SharePoint Site (hrc_SPSite)": {
+          "defaultValue": "https://contoso.sharepoint.com/sites/PeopleOps",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_SPSite"
+          }
+        },
+        "HRC Requests List (hrc_RequestsList)": {
+          "defaultValue": "HR Change Requests",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_RequestsList"
+          }
+        },
+        "HRC Tasks List (hrc_TasksList)": {
+          "defaultValue": "HR Change Tasks",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TasksList"
+          }
+        },
+        "HRC Templates List (hrc_TemplatesList)": {
+          "defaultValue": "HR Change Templates",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TemplatesList"
+          }
+        },
+        "HRC Change Types List (hrc_ChangeTypesList)": {
+          "defaultValue": "HR Change Types",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ChangeTypesList"
+          }
+        },
+        "HRC Approval Matrix List (hrc_ApprovalMatrixList)": {
+          "defaultValue": "HR Approval Matrix",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ApprovalMatrixList"
+          }
+        },
+        "HRC Settings (hrc_Settings)": {
+          "defaultValue": {
+            "requestPrefix": "HRC-",
+            "timeZone": "Eastern Standard Time",
+            "adminEmail": "cj@contoso.com",
+            "sendSubmitterConfirmation": true,
+            "intakeFormUrl": "https://contoso.sharepoint.com/sites/PeopleOps/Lists/HRChangeRequests/NewForm.aspx",
+            "slack": {
+              "intakeChannel": "<channel id of the People Ops room>",
+              "payrollChannel": "<channel id of the Payroll team room>",
+              "managersChannel": "<channel id of the people-managers channel>"
+            },
+            "payrollCutoffDays": [
+              10,
+              25
+            ],
+            "cutoffReminderBusinessDays": 2
+          },
+          "type": "Object",
+          "metadata": {
+            "schemaName": "hrc_Settings"
+          }
+        }
+      },
+      "triggers": {
+        "Every_day_at_8am": {
+          "recurrence": {
+            "frequency": "Day",
+            "interval": 1,
+            "schedule": {
+              "hours": [
+                "8"
+              ],
+              "minutes": [
+                0
+              ]
+            },
+            "timeZone": "Eastern Standard Time"
+          },
+          "type": "Recurrence"
+        }
+      },
+      "actions": {
+        "Initialize_Settings": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Settings",
+                "type": "object",
+                "value": "@parameters('HRC Settings (hrc_Settings)')"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Try": {
+          "type": "Scope",
+          "actions": {
+            "Get_open_requests": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Requests List (hrc_RequestsList)')",
+                  "$filter": "Status ne '3-Resolved'",
+                  "$orderby": "SLADueDate asc",
+                  "$top": 5000
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {}
+            },
+            "Filter_overdue": {
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_open_requests')?['body/value']",
+                "where": "@and(not(empty(item()?['SLADueDate'])), less(formatDateTime(item()?['SLADueDate'], 'yyyyMMdd'), formatDateTime(convertFromUtc(utcNow(), variables('Settings')?['timeZone']), 'yyyyMMdd')))"
+              },
+              "runAfter": {
+                "Get_open_requests": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_due_today": {
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_open_requests')?['body/value']",
+                "where": "@and(not(empty(item()?['SLADueDate'])), equals(formatDateTime(item()?['SLADueDate'], 'yyyy-MM-dd'), formatDateTime(convertFromUtc(utcNow(), variables('Settings')?['timeZone']), 'yyyy-MM-dd')))"
+              },
+              "runAfter": {
+                "Filter_overdue": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_unassigned": {
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_open_requests')?['body/value']",
+                "where": "@equals(item()?['Status']?['Value'], '0-New')"
+              },
+              "runAfter": {
+                "Filter_due_today": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_awaiting_approval": {
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_open_requests')?['body/value']",
+                "where": "@equals(item()?['ApprovalStatus']?['Value'], 'Pending')"
+              },
+              "runAfter": {
+                "Filter_unassigned": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_LOA_returning_within_7_days": {
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_open_requests')?['body/value']",
+                "where": "@and(startsWith(coalesce(item()?['ChangeType']?['Value'], ''), 'G '), not(empty(item()?['EndDate'])), lessOrEquals(ticks(item()?['EndDate']), ticks(addDays(utcNow(), 7))))"
+              },
+              "runAfter": {
+                "Filter_awaiting_approval": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Select_overdue": {
+              "type": "Select",
+              "inputs": {
+                "from": "@body('Filter_overdue')",
+                "select": "@concat('• <', item()?['{Link}'], '|', item()?['RequestId'], '> ', item()?['ChangeType']?['Value'], ' — ', item()?['EmployeeName'], ' — ', coalesce(item()?['Assignee']?['DisplayName'], 'unassigned'), if(empty(item()?['SLADueDate']), '', concat(' — due ', formatDateTime(item()?['SLADueDate'], 'MMM d'))))"
+              },
+              "runAfter": {
+                "Filter_LOA_returning_within_7_days": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Select_due_today": {
+              "type": "Select",
+              "inputs": {
+                "from": "@body('Filter_due_today')",
+                "select": "@concat('• <', item()?['{Link}'], '|', item()?['RequestId'], '> ', item()?['ChangeType']?['Value'], ' — ', item()?['EmployeeName'], ' — ', coalesce(item()?['Assignee']?['DisplayName'], 'unassigned'), if(empty(item()?['SLADueDate']), '', concat(' — due ', formatDateTime(item()?['SLADueDate'], 'MMM d'))))"
+              },
+              "runAfter": {
+                "Select_overdue": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Select_unassigned": {
+              "type": "Select",
+              "inputs": {
+                "from": "@body('Filter_unassigned')",
+                "select": "@concat('• <', item()?['{Link}'], '|', item()?['RequestId'], '> ', item()?['ChangeType']?['Value'], ' — ', item()?['EmployeeName'], ' — ', coalesce(item()?['Assignee']?['DisplayName'], 'unassigned'), if(empty(item()?['SLADueDate']), '', concat(' — due ', formatDateTime(item()?['SLADueDate'], 'MMM d'))))"
+              },
+              "runAfter": {
+                "Select_due_today": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Select_LOA_returns": {
+              "type": "Select",
+              "inputs": {
+                "from": "@body('Filter_LOA_returning_within_7_days')",
+                "select": "@concat('• <', item()?['{Link}'], '|', item()?['RequestId'], '> ', item()?['ChangeType']?['Value'], ' — ', item()?['EmployeeName'], ' — ', coalesce(item()?['Assignee']?['DisplayName'], 'unassigned'), if(empty(item()?['SLADueDate']), '', concat(' — due ', formatDateTime(item()?['SLADueDate'], 'MMM d'))))"
+              },
+              "runAfter": {
+                "Select_unassigned": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Condition_-_weekday_and_something_to_report": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "greater": [
+                      "@dayOfWeek(convertFromUtc(utcNow(), variables('Settings')?['timeZone']))",
+                      0
+                    ]
+                  },
+                  {
+                    "less": [
+                      "@dayOfWeek(convertFromUtc(utcNow(), variables('Settings')?['timeZone']))",
+                      6
+                    ]
+                  },
+                  {
+                    "greater": [
+                      "@add(add(length(body('Filter_overdue')), length(body('Filter_due_today'))), add(length(body('Filter_unassigned')), length(body('Filter_LOA_returning_within_7_days'))))",
+                      0
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Post_SLA_digest": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_slack",
+                      "operationId": "PostMessageV2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack"
+                    },
+                    "parameters": {
+                      "postMessageRequest/channel": "@variables('Settings')?['slack']?['intakeChannel']",
+                      "postMessageRequest/text": ":bar_chart: *HR Change — daily SLA check* (@{length(outputs('Get_open_requests')?['body/value'])} open, @{length(body('Filter_awaiting_approval'))} awaiting approval)\n@{if(empty(body('Select_overdue')), '', concat('*:red_circle: Overdue*', decodeUriComponent('%0A'), join(body('Select_overdue'), decodeUriComponent('%0A')), decodeUriComponent('%0A')))}@{if(empty(body('Select_due_today')), '', concat('*:large_yellow_circle: Due today*', decodeUriComponent('%0A'), join(body('Select_due_today'), decodeUriComponent('%0A')), decodeUriComponent('%0A')))}@{if(empty(body('Select_unassigned')), '', concat('*:white_circle: 0-New (not picked up)*', decodeUriComponent('%0A'), join(body('Select_unassigned'), decodeUriComponent('%0A')), decodeUriComponent('%0A')))}@{if(empty(body('Select_LOA_returns')), '', concat('*:calendar: LOA expected return within 7 days*', decodeUriComponent('%0A'), join(body('Select_LOA_returns'), decodeUriComponent('%0A'))))}"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {}
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Select_LOA_returns": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Select_cutoffs_this_month": {
+              "type": "Select",
+              "inputs": {
+                "from": "@variables('Settings')?['payrollCutoffDays']",
+                "select": "@formatDateTime(addDays(startOfMonth(convertFromUtc(utcNow(), variables('Settings')?['timeZone'])), sub(min(int(item()), dayOfMonth(addDays(startOfMonth(addToTime(startOfMonth(convertFromUtc(utcNow(), variables('Settings')?['timeZone'])), 1, 'Month')), -1))), 1)), 'yyyy-MM-dd')"
+              },
+              "runAfter": {
+                "Condition_-_weekday_and_something_to_report": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Select_cutoffs_next_month": {
+              "type": "Select",
+              "inputs": {
+                "from": "@variables('Settings')?['payrollCutoffDays']",
+                "select": "@formatDateTime(addDays(startOfMonth(addToTime(convertFromUtc(utcNow(), variables('Settings')?['timeZone']), 1, 'Month')), sub(min(int(item()), dayOfMonth(addDays(startOfMonth(addToTime(startOfMonth(addToTime(convertFromUtc(utcNow(), variables('Settings')?['timeZone']), 1, 'Month')), 1, 'Month')), -1))), 1)), 'yyyy-MM-dd')"
+              },
+              "runAfter": {
+                "Select_cutoffs_this_month": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_cutoff_reminder_due_today": {
+              "type": "Query",
+              "inputs": {
+                "from": "@union(body('Select_cutoffs_this_month'), body('Select_cutoffs_next_month'))",
+                "where": "@equals(formatDateTime(convertFromUtc(utcNow(), variables('Settings')?['timeZone']), 'yyyy-MM-dd'), formatDateTime(addDays(addDays(item(), mul(int(variables('Settings')?['cutoffReminderBusinessDays']), -1)), if(equals(dayOfWeek(addDays(item(), mul(int(variables('Settings')?['cutoffReminderBusinessDays']), -1))), 6), -1, if(equals(dayOfWeek(addDays(item(), mul(int(variables('Settings')?['cutoffReminderBusinessDays']), -1))), 0), -2, 0))), 'yyyy-MM-dd'))"
+              },
+              "description": "Today is N business days before a cutoff (a weekend reminder date moves back to Friday).",
+              "runAfter": {
+                "Select_cutoffs_next_month": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Condition_-_cutoff_reminder": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "greater": [
+                      "@length(body('Filter_cutoff_reminder_due_today'))",
+                      0
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Post_cutoff_reminder_to_managers": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_slack",
+                      "operationId": "PostMessageV2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack"
+                    },
+                    "parameters": {
+                      "postMessageRequest/channel": "@variables('Settings')?['slack']?['managersChannel']",
+                      "postMessageRequest/text": ":alarm_clock: *Payroll cutoff is @{formatDateTime(first(body('Filter_cutoff_reminder_due_today')), 'dddd, MMM d')}.* Any extra shifts or fractional FTE pickups to report for this pay period? Submit them as *I — Fractional FTE / Extra Shift Pickup*: <@{variables('Settings')?['intakeFormUrl']}|HR change request form>"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "description": "Nice-to-add from the plan: managers get asked instead of having to remember.",
+                  "runAfter": {}
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Filter_cutoff_reminder_due_today": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_Settings": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Catch": {
+          "type": "Scope",
+          "runAfter": {
+            "Try": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "description": "Catch: alert the admin with a link to the failed run.",
+          "actions": {
+            "Send_failure_alert": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "@variables('Settings')?['adminEmail']",
+                  "emailMessage/Subject": "[HR Change] HR Change - 6 Daily SLA & Cutoff failed",
+                  "emailMessage/Body": "<p>The <b>HR Change - 6 Daily SLA & Cutoff</b> flow failed.</p><p><a href=\"@{concat('https://make.powerautomate.com/environments/', workflow()?['tags']?['environmentName'], '/flows/', workflow()?['name'], '/runs/', workflow()?['run']?['name'])}\">Open the failed run</a></p>",
+                  "emailMessage/Importance": "High"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {}
+            },
+            "Terminate_as_failed": {
+              "runAfter": {
+                "Send_failure_alert": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "HRChangeFlowFailed",
+                  "message": "HR Change - 6 Daily SLA & Cutoff failed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

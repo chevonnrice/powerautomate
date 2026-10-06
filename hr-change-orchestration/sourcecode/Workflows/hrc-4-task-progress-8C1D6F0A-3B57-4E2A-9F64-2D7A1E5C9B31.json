@@ -1,0 +1,419 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_SharePoint"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Office365Outlook"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_slack": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrc_Slack"
+        },
+        "api": {
+          "name": "shared_slack"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "HRC SharePoint Site (hrc_SPSite)": {
+          "defaultValue": "https://contoso.sharepoint.com/sites/PeopleOps",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_SPSite"
+          }
+        },
+        "HRC Requests List (hrc_RequestsList)": {
+          "defaultValue": "HR Change Requests",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_RequestsList"
+          }
+        },
+        "HRC Tasks List (hrc_TasksList)": {
+          "defaultValue": "HR Change Tasks",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TasksList"
+          }
+        },
+        "HRC Templates List (hrc_TemplatesList)": {
+          "defaultValue": "HR Change Templates",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_TemplatesList"
+          }
+        },
+        "HRC Change Types List (hrc_ChangeTypesList)": {
+          "defaultValue": "HR Change Types",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ChangeTypesList"
+          }
+        },
+        "HRC Approval Matrix List (hrc_ApprovalMatrixList)": {
+          "defaultValue": "HR Approval Matrix",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrc_ApprovalMatrixList"
+          }
+        },
+        "HRC Settings (hrc_Settings)": {
+          "defaultValue": {
+            "requestPrefix": "HRC-",
+            "timeZone": "Eastern Standard Time",
+            "adminEmail": "cj@contoso.com",
+            "sendSubmitterConfirmation": true,
+            "intakeFormUrl": "https://contoso.sharepoint.com/sites/PeopleOps/Lists/HRChangeRequests/NewForm.aspx",
+            "slack": {
+              "intakeChannel": "<channel id of the People Ops room>",
+              "payrollChannel": "<channel id of the Payroll team room>",
+              "managersChannel": "<channel id of the people-managers channel>"
+            },
+            "payrollCutoffDays": [
+              10,
+              25
+            ],
+            "cutoffReminderBusinessDays": 2
+          },
+          "type": "Object",
+          "metadata": {
+            "schemaName": "hrc_Settings"
+          }
+        }
+      },
+      "triggers": {
+        "When_a_task_is_modified": {
+          "recurrence": {
+            "interval": 1,
+            "frequency": "Minute"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnUpdatedItems",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+              "table": "@parameters('HRC Tasks List (hrc_TasksList)')"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "conditions": [
+            {
+              "expression": "@not(equals(triggerOutputs()?['body/Created'], triggerOutputs()?['body/Modified']))"
+            },
+            {
+              "expression": "@not(empty(triggerOutputs()?['body/Request']?['Id']))"
+            }
+          ],
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          },
+          "description": "Modifications only (task creation is counted by the router). Concurrency 1 avoids lost updates on the parent."
+        }
+      },
+      "actions": {
+        "Initialize_Settings": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Settings",
+                "type": "object",
+                "value": "@parameters('HRC Settings (hrc_Settings)')"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Try": {
+          "type": "Scope",
+          "actions": {
+            "Get_sibling_tasks": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Tasks List (hrc_TasksList)')",
+                  "$filter": "RequestId eq '@{triggerOutputs()?['body/RequestId']}'",
+                  "$top": 500
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {}
+            },
+            "Filter_done": {
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_sibling_tasks')?['body/value']",
+                "where": "@or(equals(item()?['TaskStatus']?['Value'], 'Done'), equals(item()?['TaskStatus']?['Value'], 'N/A'))"
+              },
+              "runAfter": {
+                "Get_sibling_tasks": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_cancelled": {
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_sibling_tasks')?['body/value']",
+                "where": "@equals(item()?['TaskStatus']?['Value'], 'Cancelled')"
+              },
+              "runAfter": {
+                "Filter_done": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_Progress": {
+              "type": "Compose",
+              "inputs": {
+                "total": "@sub(length(outputs('Get_sibling_tasks')?['body/value']), length(body('Filter_cancelled')))",
+                "done": "@length(body('Filter_done'))"
+              },
+              "runAfter": {
+                "Filter_cancelled": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Get_parent_request": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Requests List (hrc_RequestsList)')",
+                  "id": "@triggerOutputs()?['body/Request']?['Id']"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {
+                "Compose_Progress": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Update_request_-_progress": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                  "table": "@parameters('HRC Requests List (hrc_RequestsList)')",
+                  "id": "@triggerOutputs()?['body/Request']?['Id']",
+                  "item/Title": "@outputs('Get_parent_request')?['body/Title']",
+                  "item/TasksTotal": "@outputs('Compose_Progress')?['total']",
+                  "item/TasksDone": "@outputs('Compose_Progress')?['done']",
+                  "item/ProgressPct": "@if(equals(outputs('Compose_Progress')?['total'], 0), 0, div(mul(outputs('Compose_Progress')?['done'], 100), outputs('Compose_Progress')?['total']))"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "description": "Gives the request a progress bar (the native Slack List subtask progress the plan wanted).",
+              "runAfter": {
+                "Get_parent_request": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Condition_-_just_completed": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@equals(outputs('Compose_Progress')?['done'], outputs('Compose_Progress')?['total'])",
+                      true
+                    ]
+                  },
+                  {
+                    "greater": [
+                      "@outputs('Compose_Progress')?['total']",
+                      0
+                    ]
+                  },
+                  {
+                    "less": [
+                      "@int(coalesce(outputs('Get_parent_request')?['body/ProgressPct'], 0))",
+                      100
+                    ]
+                  },
+                  {
+                    "not": {
+                      "equals": [
+                        "@outputs('Get_parent_request')?['body/Status']?['Value']",
+                        "3-Resolved"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "actions": {
+                "Compose_all_done_comment": {
+                  "type": "Compose",
+                  "inputs": {
+                    "text": "☑️ All checklist tasks are complete — set Status to 3-Resolved to close the case (LOA stays open until return is confirmed)."
+                  },
+                  "runAfter": {}
+                },
+                "Post_all_done_comment": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('HRC SharePoint Site (hrc_SPSite)')",
+                      "parameters/method": "POST",
+                      "parameters/uri": "_api/web/lists/getbytitle('@{parameters('HRC Requests List (hrc_RequestsList)')}')/items(@{triggerOutputs()?['body/Request']?['Id']})/Comments",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata",
+                        "Content-Type": "application/json;odata=nometadata"
+                      },
+                      "parameters/body": "@{string(outputs('Compose_all_done_comment'))}"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "description": "Item comments are the case work log (replaces the Slack List item thread).",
+                  "runAfter": {
+                    "Compose_all_done_comment": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Ping_assignee_in_People_Ops": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_slack",
+                      "operationId": "PostMessageV2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack"
+                    },
+                    "parameters": {
+                      "postMessageRequest/channel": "@variables('Settings')?['slack']?['intakeChannel']",
+                      "postMessageRequest/text": ":ballot_box_with_check: All tasks done on *<@{outputs('Get_parent_request')?['body/{Link}']}|@{triggerOutputs()?['body/RequestId']}>* — @{coalesce(outputs('Get_parent_request')?['body/Assignee']?['DisplayName'], 'owner')}, ready to resolve."
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {
+                    "Post_all_done_comment": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Update_request_-_progress": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_Settings": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Catch": {
+          "type": "Scope",
+          "runAfter": {
+            "Try": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "description": "Catch: alert the admin with a link to the failed run.",
+          "actions": {
+            "Send_failure_alert": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "@variables('Settings')?['adminEmail']",
+                  "emailMessage/Subject": "[HR Change] HR Change - 4 Task Progress failed",
+                  "emailMessage/Body": "<p>The <b>HR Change - 4 Task Progress</b> flow failed.</p><p><a href=\"@{concat('https://make.powerautomate.com/environments/', workflow()?['tags']?['environmentName'], '/flows/', workflow()?['name'], '/runs/', workflow()?['run']?['name'])}\">Open the failed run</a></p>",
+                  "emailMessage/Importance": "High"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {}
+            },
+            "Terminate_as_failed": {
+              "runAfter": {
+                "Send_failure_alert": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "HRChangeFlowFailed",
+                  "message": "HR Change - 4 Task Progress failed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}
