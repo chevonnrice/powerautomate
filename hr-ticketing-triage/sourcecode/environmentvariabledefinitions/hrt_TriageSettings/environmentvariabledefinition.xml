@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="hrt_TriageSettings">
+  <defaultvalue>{"confidenceThreshold":0.7,"maxBodyChars":6000,"ticketPrefix":"HR-","templateSubjectKeyword":"HR Request","sendAcknowledgement":true,"copyAttachments":true,"moveEmails":true,"logDecisions":true,"folders":{"ticketed":"&lt;folder id of Inbox/Triage - Ticketed&gt;","noAction":"&lt;folder id of Inbox/Triage - No Action&gt;","review":"&lt;folder id of Inbox/Triage - Review&gt;"},"ignoreSenderPatterns":["noreply","no-reply","donotreply","do-not-reply","mailer-daemon","postmaster","notifications@","newsletter"],"ignoreSubjectPrefixes":["automatic reply","auto-reply","autoreply","out of office","undeliverable","delivery status notification","delivery has failed","accepted:","declined:","tentative:","canceled:","read:","recall:"],"categories":["Payroll","Benefits","Leave &amp; Absence","Onboarding","Offboarding","Employee Relations","Policy Question","Employment Verification","Personal Data Change","Recruiting","Training","Other"],"routing":{"Payroll":"payroll.specialist@contoso.com","Benefits":"benefits.specialist@contoso.com","Leave &amp; Absence":"benefits.specialist@contoso.com","Onboarding":"hr.generalist@contoso.com","Offboarding":"hr.generalist@contoso.com","Employee Relations":"hr.business.partner@contoso.com","Employment Verification":"hr.coordinator@contoso.com","Personal Data Change":"hr.coordinator@contoso.com","Recruiting":"talent.acquisition@contoso.com","default":"hr.coordinator@contoso.com"},"sensitiveAssignee":"hr.director@contoso.com","slaHours":{"Urgent":4,"High":24,"Medium":72,"Low":120},"adminEmail":"hr.ops@contoso.com","digestRecipients":"hr-team@contoso.com","autoCloseResolvedAfterDays":5}</defaultvalue>
+  <description default="Thresholds, ignore rules, categories, routing map, SLAs and folder ids (see assets/triage-settings.json)">
+    <label description="Thresholds, ignore rules, categories, routing map, SLAs and folder ids (see assets/triage-settings.json)" languagecode="1033" />
+  </description>
+  <displayname default="HR Triage Settings">
+    <label description="HR Triage Settings" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000003</type>
+</environmentvariabledefinition>

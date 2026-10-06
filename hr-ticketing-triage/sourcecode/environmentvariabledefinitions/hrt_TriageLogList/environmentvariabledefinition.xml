@@ -1,0 +1,18 @@
+<environmentvariabledefinition schemaname="hrt_TriageLogList">
+  <apiid>/providers/microsoft.powerapps/apis/shared_sharepointonline</apiid>
+  <description default="The HR Triage Log list (audit of every triage decision)">
+    <label description="The HR Triage Log list (audit of every triage decision)" languagecode="1033" />
+  </description>
+  <displayname default="HR Triage Log List">
+    <label description="HR Triage Log List" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <parameterkey>table</parameterkey>
+  <parentdefinitionid>
+    <schemaname>hrt_SPSite</schemaname>
+  </parentdefinitionid>
+  <secretstore>0</secretstore>
+  <type>100000004</type>
+</environmentvariabledefinition>

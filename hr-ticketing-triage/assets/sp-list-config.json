@@ -1,0 +1,51 @@
+{
+  "lists": [
+    {
+      "title": "HR Tickets",
+      "description": "Actionable HR requests created by the hr-inbox-triage flow. Only emails that need HR action land here.",
+      "fields": [
+        { "internalName": "Title", "type": "Text", "description": "Email subject (max 255 characters)" },
+        { "internalName": "TicketNumber", "type": "Text", "indexed": true, "description": "HR-000123. Set by the flow" },
+        { "internalName": "RequesterEmail", "type": "Text" },
+        { "internalName": "EmployeeName", "type": "Text" },
+        { "internalName": "Category", "type": "Choice", "choices": ["Payroll", "Benefits", "Leave & Absence", "Onboarding", "Offboarding", "Employee Relations", "Policy Question", "Employment Verification", "Personal Data Change", "Recruiting", "Training", "Other"], "default": "Other" },
+        { "internalName": "Priority", "type": "Choice", "choices": ["Low", "Medium", "High", "Urgent"], "default": "Medium" },
+        { "internalName": "Status", "type": "Choice", "indexed": true, "choices": ["New", "Needs Triage", "In Progress", "Waiting on Requester", "Requester Replied", "Resolved", "Closed"], "default": "New" },
+        { "internalName": "AssignedTo", "type": "User" },
+        { "internalName": "Summary", "type": "Note", "description": "One-sentence Copilot summary" },
+        { "internalName": "RequestedAction", "type": "Text" },
+        { "internalName": "Sensitive", "type": "Boolean", "default": "0" },
+        { "internalName": "AIConfidence", "type": "Number", "min": 0, "max": 1, "decimals": 2 },
+        { "internalName": "ConversationId", "type": "Text", "indexed": true, "description": "Outlook conversation id. Used to attach replies to the same ticket" },
+        { "internalName": "InternetMessageId", "type": "Text" },
+        { "internalName": "ReceivedOn", "type": "DateTime" },
+        { "internalName": "DueDate", "type": "DateTime", "indexed": true, "description": "SLA due date from priority (settings.slaHours)" },
+        { "internalName": "LastActivity", "type": "DateTime" },
+        { "internalName": "ReplyCount", "type": "Number", "decimals": 0, "default": "0" },
+        { "internalName": "ThreadLog", "type": "Note", "richText": false, "description": "Appended by the flow for each reply in the conversation" },
+        { "internalName": "OriginalEmail", "type": "Note", "richText": false, "description": "Plain-text body (not stored for sensitive tickets)" },
+        { "internalName": "ResolutionNotes", "type": "Note", "description": "Written by HR and included in the resolution email" },
+        { "internalName": "ResolutionNotified", "type": "Boolean", "default": "0" },
+        { "internalName": "ResolvedOn", "type": "DateTime", "indexed": true }
+      ]
+    },
+    {
+      "title": "HR Triage Log",
+      "description": "One row per email the triage flow processed, whatever the decision. Used for auditing and for tuning the Copilot prompt.",
+      "fields": [
+        { "internalName": "Title", "type": "Text" },
+        { "internalName": "Sender", "type": "Text" },
+        { "internalName": "ReceivedOn", "type": "DateTime" },
+        { "internalName": "Decision", "type": "Choice", "choices": ["ticket", "thread", "noaction", "review", "ignore", "classify"] },
+        { "internalName": "Reason", "type": "Note", "richText": false },
+        { "internalName": "TicketNumber", "type": "Text" },
+        { "internalName": "AICategory", "type": "Text" },
+        { "internalName": "AIConfidence", "type": "Number", "min": 0, "max": 1, "decimals": 2 },
+        { "internalName": "AISummary", "type": "Note", "richText": false },
+        { "internalName": "ConversationId", "type": "Text" },
+        { "internalName": "FlowRun", "type": "Note", "richText": false },
+        { "internalName": "HumanVerdict", "type": "Choice", "choices": ["Correct", "Should have been a ticket", "Should not have been a ticket", "Wrong category or priority"], "description": "Filled in by HR during the weekly tuning review" }
+      ]
+    }
+  ]
+}

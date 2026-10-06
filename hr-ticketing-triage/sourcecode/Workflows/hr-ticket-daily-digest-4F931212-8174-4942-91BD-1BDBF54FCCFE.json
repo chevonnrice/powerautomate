@@ -1,0 +1,416 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrt_Office365Outlook"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrt_SharePoint"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "HR Shared Mailbox (hrt_SharedMailbox)": {
+          "defaultValue": "hr@contoso.com",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrt_SharedMailbox"
+          }
+        },
+        "HR SharePoint Site (hrt_SPSite)": {
+          "defaultValue": "https://contoso.sharepoint.com/sites/HR",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrt_SPSite"
+          }
+        },
+        "HR Tickets List (hrt_TicketsList)": {
+          "defaultValue": "HR Tickets",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrt_TicketsList"
+          }
+        },
+        "HR Triage Settings (hrt_TriageSettings)": {
+          "defaultValue": {
+            "confidenceThreshold": 0.7,
+            "maxBodyChars": 6000,
+            "ticketPrefix": "HR-",
+            "templateSubjectKeyword": "HR Request",
+            "sendAcknowledgement": true,
+            "copyAttachments": true,
+            "moveEmails": true,
+            "logDecisions": true,
+            "folders": {
+              "ticketed": "<folder id of Inbox/Triage - Ticketed>",
+              "noAction": "<folder id of Inbox/Triage - No Action>",
+              "review": "<folder id of Inbox/Triage - Review>"
+            },
+            "ignoreSenderPatterns": [
+              "noreply",
+              "no-reply",
+              "donotreply",
+              "do-not-reply",
+              "mailer-daemon",
+              "postmaster",
+              "notifications@",
+              "newsletter"
+            ],
+            "ignoreSubjectPrefixes": [
+              "automatic reply",
+              "auto-reply",
+              "autoreply",
+              "out of office",
+              "undeliverable",
+              "delivery status notification",
+              "delivery has failed",
+              "accepted:",
+              "declined:",
+              "tentative:",
+              "canceled:",
+              "read:",
+              "recall:"
+            ],
+            "categories": [
+              "Payroll",
+              "Benefits",
+              "Leave & Absence",
+              "Onboarding",
+              "Offboarding",
+              "Employee Relations",
+              "Policy Question",
+              "Employment Verification",
+              "Personal Data Change",
+              "Recruiting",
+              "Training",
+              "Other"
+            ],
+            "routing": {
+              "Payroll": "payroll.specialist@contoso.com",
+              "Benefits": "benefits.specialist@contoso.com",
+              "Leave & Absence": "benefits.specialist@contoso.com",
+              "Onboarding": "hr.generalist@contoso.com",
+              "Offboarding": "hr.generalist@contoso.com",
+              "Employee Relations": "hr.business.partner@contoso.com",
+              "Employment Verification": "hr.coordinator@contoso.com",
+              "Personal Data Change": "hr.coordinator@contoso.com",
+              "Recruiting": "talent.acquisition@contoso.com",
+              "default": "hr.coordinator@contoso.com"
+            },
+            "sensitiveAssignee": "hr.director@contoso.com",
+            "slaHours": {
+              "Urgent": 4,
+              "High": 24,
+              "Medium": 72,
+              "Low": 120
+            },
+            "adminEmail": "hr.ops@contoso.com",
+            "digestRecipients": "hr-team@contoso.com",
+            "autoCloseResolvedAfterDays": 5
+          },
+          "type": "Object",
+          "metadata": {
+            "schemaName": "hrt_TriageSettings"
+          }
+        }
+      },
+      "triggers": {
+        "Every_weekday_morning": {
+          "recurrence": {
+            "frequency": "Week",
+            "interval": 1,
+            "schedule": {
+              "weekDays": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "hours": [
+                "7"
+              ],
+              "minutes": [
+                45
+              ]
+            },
+            "timeZone": "Eastern Standard Time"
+          },
+          "type": "Recurrence"
+        }
+      },
+      "actions": {
+        "Initialize_Settings": {
+          "runAfter": {},
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Settings",
+                "type": "object",
+                "value": "@parameters('HR Triage Settings (hrt_TriageSettings)')"
+              }
+            ]
+          }
+        },
+        "Try": {
+          "runAfter": {
+            "Initialize_Settings": [
+              "Succeeded"
+            ]
+          },
+          "type": "Scope",
+          "actions": {
+            "Get_open_tickets": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HR SharePoint Site (hrt_SPSite)')",
+                  "table": "@parameters('HR Tickets List (hrt_TicketsList)')",
+                  "$filter": "Status ne 'Resolved' and Status ne 'Closed'",
+                  "$orderby": "DueDate asc",
+                  "$top": 5000
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Filter_overdue": {
+              "runAfter": {
+                "Get_open_tickets": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_open_tickets')?['body/value']",
+                "where": "@and(not(empty(item()?['DueDate'])), less(ticks(item()?['DueDate']), ticks(utcNow())))"
+              }
+            },
+            "Filter_needs_triage": {
+              "runAfter": {
+                "Filter_overdue": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Query",
+              "inputs": {
+                "from": "@outputs('Get_open_tickets')?['body/value']",
+                "where": "@equals(item()?['Status']?['Value'], 'Needs Triage')"
+              }
+            },
+            "Select_overdue_rows": {
+              "runAfter": {
+                "Filter_needs_triage": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Select",
+              "inputs": {
+                "from": "@body('Filter_overdue')",
+                "select": {
+                  "Ticket": "@item()?['TicketNumber']",
+                  "Subject": "@item()?['Title']",
+                  "Category": "@item()?['Category']?['Value']",
+                  "Priority": "@item()?['Priority']?['Value']",
+                  "Status": "@item()?['Status']?['Value']",
+                  "Assigned to": "@item()?['AssignedTo']?['DisplayName']",
+                  "Due": "@formatDateTime(item()?['DueDate'], 'yyyy-MM-dd HH:mm')"
+                }
+              }
+            },
+            "Create_overdue_table": {
+              "runAfter": {
+                "Select_overdue_rows": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Table",
+              "inputs": {
+                "from": "@body('Select_overdue_rows')",
+                "format": "HTML"
+              }
+            },
+            "Condition_-_anything_to_report": {
+              "runAfter": {
+                "Create_overdue_table": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "or": [
+                  {
+                    "greater": [
+                      "@length(body('Filter_overdue'))",
+                      0
+                    ]
+                  },
+                  {
+                    "greater": [
+                      "@length(body('Filter_needs_triage'))",
+                      0
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Send_digest": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_office365",
+                      "operationId": "SharedMailboxSendEmailV2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                    },
+                    "parameters": {
+                      "emailMessage/MailboxAddress": "@parameters('HR Shared Mailbox (hrt_SharedMailbox)')",
+                      "emailMessage/To": "@variables('Settings')?['digestRecipients']",
+                      "emailMessage/Subject": "HR ticket digest - @{length(body('Filter_overdue'))} overdue, @{length(body('Filter_needs_triage'))} need triage",
+                      "emailMessage/Body": "<p><b>Open tickets:</b> @{length(outputs('Get_open_tickets')?['body/value'])}<br/><b>Needs triage (low Copilot confidence or Copilot unavailable):</b> @{length(body('Filter_needs_triage'))}<br/><b>Overdue:</b> @{length(body('Filter_overdue'))}</p><h3>Overdue tickets</h3>@{body('Create_overdue_table')}",
+                      "emailMessage/Importance": "Normal"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              }
+            },
+            "Get_stale_resolved_tickets": {
+              "runAfter": {
+                "Condition_-_anything_to_report": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('HR SharePoint Site (hrt_SPSite)')",
+                  "table": "@parameters('HR Tickets List (hrt_TicketsList)')",
+                  "$filter": "Status eq 'Resolved' and ResolvedOn lt '@{addDays(utcNow(), mul(int(variables('Settings')?['autoCloseResolvedAfterDays']), -1))}'",
+                  "$top": 5000
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Apply_to_each_stale_ticket": {
+              "foreach": "@outputs('Get_stale_resolved_tickets')?['body/value']",
+              "actions": {
+                "Close_ticket": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PatchItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('HR SharePoint Site (hrt_SPSite)')",
+                      "table": "@parameters('HR Tickets List (hrt_TicketsList)')",
+                      "id": "@items('Apply_to_each_stale_ticket')?['ID']",
+                      "item/Title": "@items('Apply_to_each_stale_ticket')?['Title']",
+                      "item/Status/Value": "Closed"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  }
+                }
+              },
+              "runAfter": {
+                "Get_stale_resolved_tickets": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Foreach",
+              "description": "Resolved tickets with no requester reply for N days are closed automatically."
+            }
+          }
+        },
+        "Catch": {
+          "runAfter": {
+            "Try": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "type": "Scope",
+          "actions": {
+            "Send_failure_alert": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "@variables('Settings')?['adminEmail']",
+                  "emailMessage/Subject": "[HR Triage] HR ticket daily digest failed",
+                  "emailMessage/Body": "<p>The <b>HR ticket daily digest</b> flow failed.</p><p><a href=\"@{concat('https://make.powerautomate.com/environments/', workflow()?['tags']?['environmentName'], '/flows/', workflow()?['name'], '/runs/', workflow()?['run']?['name'])}\">Open the failed run</a></p><p>Check the run history; the email (if any) has been left in the shared mailbox Inbox so it can be re-processed or handled manually.</p>",
+                  "emailMessage/Importance": "High"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Terminate_as_failed": {
+              "runAfter": {
+                "Send_failure_alert": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "HRTriageFailed",
+                  "message": "HR ticket daily digest failed - see Try scope"
+                }
+              }
+            }
+          },
+          "description": "Catch: alerts the HR automation admin with a link to the failed run."
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

@@ -1,0 +1,26 @@
+Subject: HR Request - <short title>
+
+Request Type | <one of: Payroll, Benefits, Leave & Absence, Onboarding, Offboarding, Employee Relations, Policy Question, Employment Verification, Personal Data Change, Recruiting, Training, Other> | Employee Name | <full name> | Details | <what you need from HR> | Urgency | <Low, Medium, High or Urgent> |
+
+------------------------------------------------------------------------------
+How it is parsed (same technique as the reference video):
+
+  split(<plain text body>, '|')
+    [0] "Request Type"   [1] value  -> Category
+    [2] "Employee Name"  [3] value  -> EmployeeName
+    [4] "Details"        [5] value  -> Summary / RequestedAction
+    [6] "Urgency"        [7] value  -> Priority
+
+Rules:
+  * The subject must contain the keyword in settings.templateSubjectKeyword ("HR Request").
+  * Keep the row on ONE line, and do not use the | character inside a value.
+  * Any text before "Request Type" (a greeting) is fine.
+  * Templated emails skip Copilot (no AI credits used). Emails that don't follow the template are
+    still handled by the Copilot classification step, so nothing is rejected for formatting.
+
+Example:
+
+Subject: HR Request - Address change
+
+Hi team,
+Request Type | Personal Data Change | Employee Name | Sam Patel | Details | Please update my home address to 12 Elm St, Springfield 01101 | Urgency | Low |
