@@ -104,6 +104,10 @@ Every flow has Try/Catch, and failures email `adminEmail` a link to the failed r
 
 ## Setup (Minimal Path to Awesome)
 
+> **Prefer to build it by hand, one flow at a time?** Follow [`manual-build/`](manual-build/README.md). You create the lists
+> from CSV files and build each flow in the designer with copy-paste expressions, testing as you go. No solution import needed.
+
+
 1. **Lists:** run
    `./scripts/Provision-HRChangeLists.ps1 -SiteUrl https://<tenant>.sharepoint.com/sites/PeopleOps -ClientId <pnp-app-id>`.
    It creates the 5 lists, columns and views, and seeds the 11 change types, templates A1–I and a starter approval matrix.

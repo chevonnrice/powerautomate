@@ -1,0 +1,12 @@
+﻿Title,Code,DueDateRule,SLABusinessDays,SLALabel,ApprovalStage1,ApprovalStage2,ApprovalStage3,DefaultAssigneeEmail,CloseLoopEmail,PostSummaryToIntake,NotifyPayrollOnResolve
+A1 — Offboarding (Voluntary),A1,Effective date,,"Same day intake, executed by last day",,,,,No,Yes,No
+A2 — Offboarding (Involuntary),A2,Effective date,,"Same day intake, executed by last day",,,,,No,Yes,No
+B — Job / Status Change,B,Business days after submission,3,2–3 business days,Manager,Regional,,,Yes,No,No
+C — Comp Change,C,Business days after submission,5,3–5 business days,Manager,Regional,HR,,Yes,No,No
+D — Pay / Banking Change,D,Business days after submission,2,1–2 business days,,,,,Yes,No,No
+E — Personal Data Change,E,Business days after submission,1,1 business day,,,,,Yes,No,No
+F — Time / PTO,F,Business days after submission,2,1–2 business days,Manager,,,,Yes,No,No
+G — LOA,G,None,,Per policy,,,,cj@contoso.com,No,No,No
+H — Benefits / Life Event,H,Business days after submission,3,2–3 business days,,,,,Yes,No,No
+I — Fractional FTE / Extra Shift Pickup,I,Business days after submission,2,Before the payroll cutoff,HR,,,,No,No,Yes
+Other,Other,None,,Needs manual scoping,,,,,Yes,No,No

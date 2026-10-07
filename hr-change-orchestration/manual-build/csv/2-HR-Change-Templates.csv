@@ -1,0 +1,74 @@
+﻿Title,ChangeType,StepOrder,Details,OwnerRole,Automation,BlockedUntilApproved,DueOnEffectiveDate,Active
+Confirm last day and exit reason,A1 — Offboarding (Voluntary),1,"Capture: resignation, end of contract, or mutual separation",HR,None,No,No,Yes
+Obtain resignation letter from manager → save to HR file,A1 — Offboarding (Voluntary),2,,HR,None,No,No,Yes
+Acknowledge receipt to manager; send link to New Req Request form (backfill),A1 — Offboarding (Voluntary),3,,Talent,None,No,No,Yes
+Forward resignation letter to relevant People leadership,A1 — Offboarding (Voluntary),4,,HR,None,No,No,Yes
+Schedule exit interview,A1 — Offboarding (Voluntary),5,,HR,None,No,No,Yes
+Send change-in-relationship notice as PDF to employee; file copy into HR file,A1 — Offboarding (Voluntary),6,,HR,None,No,No,Yes
+Add to Monday payroll board — final pay and PTO payout,A1 — Offboarding (Voluntary),7,,Payroll,None,No,No,Yes
+Notify offboarding distro,A1 — Offboarding (Voluntary),8,Triggers: Tech ticket to Methodology (access revocation) • Credentialing team deactivates in Medallion • ICS confirms whether client-issued equipment needs return • Equipment return materials sent if applicable (client included if embedded),HR,None,No,No,Yes
+Create Jira ticket → access revocation + equipment retrieval (IT),A1 — Offboarding (Voluntary),9,Paste the ticket link into the request's Jira link field,IT,None,No,No,Yes
+Remove from Joon / BetterHelp,A1 — Offboarding (Voluntary),10,,HR,None,No,No,Yes
+Terminate in Paycor — on last day only (do not enter early; date may shift),A1 — Offboarding (Voluntary),11,,HR,None,No,Yes,Yes
+Update Employee List,A1 — Offboarding (Voluntary),12,,HR,None,No,No,Yes
+Move HR folder to Termed (PC entity or LLC entity per applicable structure),A1 — Offboarding (Voluntary),13,,HR,None,No,No,Yes
+Track equipment return,A1 — Offboarding (Voluntary),14,,HR,None,No,No,Yes
+Send exit interview feedback to manager / People leadership,A1 — Offboarding (Voluntary),15,,HR,None,No,No,Yes
+Confirm completion → post summary to HR intake channel,A1 — Offboarding (Voluntary),16,,HR,Resolution,No,No,Yes
+Confirm last day and exit reason,A2 — Offboarding (Involuntary),1,"Capture: termination, reduction in force, end of contract (non-renewed), or performance-based",HR,None,No,No,Yes
+Notify offboarding distro,A2 — Offboarding (Involuntary),2,"Triggers: Tech ticket to Methodology (access revocation — timing-sensitive, coordinate with last day) • Credentialing team deactivates in Medallion • ICS confirms whether client-issued equipment needs return • Equipment return materials sent if applicable (client included if embedded)",HR,None,No,No,Yes
+Create Jira ticket → access revocation + equipment retrieval (IT),A2 — Offboarding (Involuntary),3,Paste the ticket link into the request's Jira link field,IT,None,No,No,Yes
+Generate termination letter (Word template) → send to employee with letter attached,A2 — Offboarding (Involuntary),4,,HR,None,No,No,Yes
+Send change-in-relationship notice as PDF to employee; file copy into HR file,A2 — Offboarding (Involuntary),5,,HR,None,No,No,Yes
+Add to Monday payroll board — final pay and PTO payout,A2 — Offboarding (Involuntary),6,,Payroll,None,No,No,Yes
+Remove from Joon / BetterHelp,A2 — Offboarding (Involuntary),7,,HR,None,No,No,Yes
+Terminate in Paycor — on last day only (do not enter early; date may shift),A2 — Offboarding (Involuntary),8,,HR,None,No,Yes,Yes
+Update Employee List,A2 — Offboarding (Involuntary),9,,HR,None,No,No,Yes
+Move HR folder to Termed (PC entity or LLC entity per applicable structure),A2 — Offboarding (Involuntary),10,,HR,None,No,No,Yes
+Track equipment return,A2 — Offboarding (Involuntary),11,,HR,None,No,No,Yes
+Confirm completion → post summary to HR intake channel,A2 — Offboarding (Involuntary),12,,HR,Resolution,No,No,Yes
+"Confirm new title, department, location, FT/PT/PRN status",B — Job / Status Change,1,,HR,None,No,No,Yes
+Route approval request → manager + Regional (per approval matrix),B — Job / Status Change,2,Automatic: HR Change - 3 Approvals,HR,Approval,No,No,Yes
+On approval: update Paycor,B — Job / Status Change,3,,HR,None,Yes,No,Yes
+"Trigger Directory sync (Step 2, Project 10k)",B — Job / Status Change,4,,HR,None,Yes,No,Yes
+Close-the-loop email to requestor,B — Job / Status Change,5,,HR,Resolution,No,No,Yes
+Mark list item complete,B — Job / Status Change,6,,HR,Resolution,No,No,Yes
+"Confirm new rate, effective pay period",C — Comp Change,1,,HR,None,No,No,Yes
+"Route approval → manager, Regional, HR (per approval matrix)",C — Comp Change,2,Automatic: HR Change - 3 Approvals,HR,Approval,No,No,Yes
+On approval: notify payroll via email or Monday payroll board post,C — Comp Change,3,,Payroll,None,Yes,No,Yes
+Update Paycor,C — Comp Change,4,,HR,None,Yes,No,Yes
+Close-the-loop email to requestor,C — Comp Change,5,,HR,Resolution,No,No,Yes
+Mark list item complete,C — Comp Change,6,,HR,Resolution,No,No,Yes
+Flag for manual verification → DM CJ or Johanna,D — Pay / Banking Change,1,,HR,None,No,No,Yes
+Verify supporting documentation received,D — Pay / Banking Change,2,,HR,None,No,No,Yes
+Execute change in Paycor,D — Pay / Banking Change,3,,HR,None,No,No,Yes
+Log verification + completion to list item,D — Pay / Banking Change,4,,HR,Resolution,No,No,Yes
+Close-the-loop to requestor,D — Pay / Banking Change,5,,HR,Resolution,No,No,Yes
+Mark list item complete,D — Pay / Banking Change,6,,HR,Resolution,No,No,Yes
+Confirm field(s) changing and new value,E — Personal Data Change,1,,HR,None,No,No,Yes
+Update in Paycor,E — Personal Data Change,2,,HR,None,No,No,Yes
+Log completion to list item,E — Personal Data Change,3,,HR,Resolution,No,No,Yes
+Close-the-loop to requestor,E — Personal Data Change,4,,HR,Resolution,No,No,Yes
+Mark list item complete,E — Personal Data Change,5,,HR,Resolution,No,No,Yes
+"Confirm request type, dates, hours",F — Time / PTO,1,,HR,None,No,No,Yes
+Route to manager for approval,F — Time / PTO,2,Automatic: HR Change - 3 Approvals (replaces the Slack DM step),HR,Approval,No,No,Yes
+On approval: log in Paycor,F — Time / PTO,3,,HR,None,Yes,No,Yes
+Close-the-loop to requestor,F — Time / PTO,4,,HR,Resolution,No,No,Yes
+Mark list item complete,F — Time / PTO,5,,HR,Resolution,No,No,Yes
+"Confirm leave type, start date, expected return",G — LOA,1,,HR,None,No,No,Yes
+Verify documentation received,G — LOA,2,,HR,None,No,No,Yes
+Route to CJ for case management setup,G — LOA,3,,CJ,None,No,No,Yes
+Notify payroll of leave dates,G — LOA,4,,Payroll,None,No,No,Yes
+Update Paycor,G — LOA,5,,HR,None,No,No,Yes
+Log to list item with return date noted,G — LOA,6,Keep 'End / expected return' current on the request - the daily digest flags returns due within 7 days,HR,None,No,No,Yes
+Keep item open (1-Assigned) until return confirmed,G — LOA,7,Only set 3-Resolved once the return is confirmed,HR,None,No,No,Yes
+Confirm event type and qualifying date,H — Benefits / Life Event,1,,HR,None,No,No,Yes
+Verify documentation received,H — Benefits / Life Event,2,,HR,None,No,No,Yes
+Route to benefits team or process in Employee Navigator,H — Benefits / Life Event,3,,HR,None,No,No,Yes
+Confirm enrollment/change effective,H — Benefits / Life Event,4,,HR,None,No,No,Yes
+Close-the-loop to requestor,H — Benefits / Life Event,5,,HR,Resolution,No,No,Yes
+Mark list item complete,H — Benefits / Life Event,6,,HR,Resolution,No,No,Yes
+HR approval: review against predetermined criteria,I — Fractional FTE / Extra Shift Pickup,1,"Rate validity, hours/dates make sense, within policy. Automatic: HR Change - 3 Approvals",HR,Approval,No,No,Yes
+Earning setup: add a single event earning in Paycor,I — Fractional FTE / Extra Shift Pickup,2,Rate type (hourly vs. flat day rate) drives which earning code is used,HR,None,Yes,No,Yes
+Confirm the earning is logged against the correct pay period,I — Fractional FTE / Extra Shift Pickup,3,Check Pay period / Submitted after cutoff on the request,HR,None,Yes,No,Yes
+Mark list item complete (3-Resolved) once the earning is entered,I — Fractional FTE / Extra Shift Pickup,4,"Payroll is then notified automatically to verify in Paycor. They are a verifier, not a gate",HR,Resolution,No,No,Yes
