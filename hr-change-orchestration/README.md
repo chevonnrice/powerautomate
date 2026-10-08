@@ -8,7 +8,7 @@ The HR Change + Orchestration project plan (Project 10k, Steps 5, 5b, 6), rebuil
   Everything specific to a request lives in its **Description** and its **sub-step Checklist**.
 * **16 general HR request types** in five groups (onboarding, job and pay changes, time off, leave, benefits, data updates,
   letters, training, policy questions, employee relations, requisitions, offboarding, extra pay), with the original A1–I mapped in.
-* **One Excel workbook of reference tables** holds settings, SLAs, approval chains, the A1–I checklists and approvers.
+* **One Excel workbook of reference tables** holds settings, SLAs, approval chains, the sub-step checklists for every request type, and approvers.
   The flows read it, so you change behaviour by editing Excel, not flows.
 * **Seven small Power Automate flows**: 0 Form Intake, 1 Intake Notification, 2 Checklist Router, 3 Case Updates, 4 Close-out
   (completion auto-comment + the plan's Payroll FYI), 5 Approval Routing, 6 Daily Digest + payroll cutoff reminder.
