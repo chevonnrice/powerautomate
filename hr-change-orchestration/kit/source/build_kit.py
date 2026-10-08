@@ -122,16 +122,16 @@ def build_reference():
         "  2. Never rename, delete or reorder-rename a column header in those tables. Adding rows is always fine.",
         "  3. Add rows INSIDE the table (Tab from the last cell, or type in the row right under it).",
         "  4. Yes/No columns contain exactly Yes or No. Step is two digits (01, 02 … 16) so steps sort correctly.",
-        "  5. Code must be the change type's prefix (A1, A2, B … I, Other) — the flows read it from the start of the Change Type value.",
+        "  5. Code must be the change type's prefix (ONB, JOB, COMP … OTHER) — the flows read it from the text before ' — ' in the Category value.",
         "  6. ApprovalChain lists roles in order, separated by '>':  Manager > Regional > HR.  Roles: Manager, Regional, HR, Payroll. Blank = no approval.",
         "",
         "What each table drives:",
         "  tblSettings     → prefix, time zone, payroll cutoffs, reminder timing, front-door link, admin email (all flows)",
-        "  tblChangeTypes  → SLA, due-date rule, approval chain, default assignee, close-the-loop email, People Ops summary, sensitive (Flows 1, 2, 4, 5, 7)",
-        "  tblChecklist    → the checklist posted to each new request (Flow 2); Auto = 'approval' / 'resolution' steps tick themselves (Flows 4, 5)",
+        "  tblChangeTypes  → priority, SLA, due-date rule, approval chain, default assignee, info-needed prompt, close-the-loop, Payroll FYI, sensitive (Flows 1, 2, 4, 5, 6)",
+        "  tblChecklist    → the sub-steps posted to each new request (Flow 2); Auto = 'approval' / 'resolution' steps tick themselves (Flows 4, 5)",
         "  tblApprovers    → Regional / HR / Payroll approvers by region; Manager comes from the request (Flow 5)",
         "",
-        "Reference only (not read by flows): List Fields, Statuses, Views — use them to build and maintain the SharePoint list.",
+        "Reference only (not read by flows): List Fields, Form Questions, Statuses, Views — use them to build and maintain the list and the form.",
         "Changes take effect for the NEXT request submitted. Existing requests keep the checklist they were given.",
     ])
     ws.column_dimensions["A"].width = 150
@@ -151,11 +151,13 @@ def build_reference():
 
     ws = wb.create_sheet("Change Types")
     brand_sheet(ws, title)
-    r = title_block(ws, "Change Types", "One row per change type. SLA, approval chain and notifications.")
-    write_table(ws, r, D.CHANGE_TYPE_COLS, [list(c) for c in D.CHANGE_TYPES], "tblChangeTypes",
-                widths=[8, 36, 12, 18, 30, 26, 30, 14, 18, 11, 48, 60],
+    r = title_block(ws, "Change Types", "One row per HR request type. SLA, approval chain, notifications and the 'info needed' prompt. PlanRef = the original A1–I type.")
+    write_table(ws, r, D.CHANGE_TYPE_COLS, D.change_type_rows(), "tblChangeTypes",
+                widths=[8, 40, 18, 15, 11, 16, 30, 24, 28, 12, 14, 14, 10, 70, 9, 60],
                 validations={"DueDateRule": ["Business days", "Effective date", "None"], "CloseLoopEmail": ["Yes", "No"],
-                             "PostSummaryToPeopleOps": ["Yes", "No"], "Sensitive": ["Yes", "No"]})
+                             "PostSummaryToPeopleOps": ["Yes", "No"], "NotifyPayrollOnClose": ["Yes", "No"], "Sensitive": ["Yes", "No"],
+                             "DefaultPriority": ["Urgent", "Time-sensitive", "Routine"],
+                             "Group": ["Employee lifecycle", "Pay & time", "Benefits & leave", "Service & records", "Employee relations"]})
     ws.freeze_panes = ws.cell(row=r + 1, column=3)
 
     ws = wb.create_sheet("Checklists")
@@ -180,11 +182,19 @@ def build_reference():
 
     ws = wb.create_sheet("List Fields")
     brand_sheet(ws, title)
-    r = title_block(ws, f"List Fields — the one list: {D.LIST_NAME}", "Reference for building the list. Internal names (no spaces) are what the flows use.")
-    rows = [[f[0], f[1], f[2], f[3], f[4], f[5], f[6], D.show_formula(f), f[7]] for f in D.FIELDS]
-    write_table(ws, r, ["Internal name", "Display name", "Type", "Required", "Choices / default", "Group", "Show for codes", "Show formula (form)", "Set by"],
-                rows, "refListFields", widths=[22, 28, 24, 10, 60, 12, 12, 90, 50])
+    r = title_block(ws, f"List Fields — the one list: {D.LIST_NAME}", "Core columns only. Everything request-specific lives in Description and the Checklist. Internal names (no spaces) are what the flows use.")
+    last = write_table(ws, r, ["Internal name", "Display name", "Type", "Choices / default", "Source", "Set by"],
+                       [list(f) for f in D.FIELDS], "refListFields", widths=[20, 22, 28, 70, 16, 60])
     ws.freeze_panes = ws.cell(row=r + 1, column=2)
+    g = last + 3
+    ws.cell(row=g - 1, column=1, value="Inspiration columns left out (on purpose)").font = Font(name=XL_FONT, bold=True, color=FOREST, size=12)
+    write_table(ws, g, ["Column", "Why"], [list(o) for o in D.OMITTED_CORE], "refOmitted")
+
+    ws = wb.create_sheet("Form Questions")
+    brand_sheet(ws, title)
+    r = title_block(ws, f"Microsoft Form: '{D.FORM_NAME}' (the front door)", "Org-only, record name. Flow 0 copies each answer into the list column shown.")
+    write_table(ws, r, ["#", "Question", "Type", "Required", "Notes / choices", "List column"], [list(q) for q in D.FORM_QUESTIONS], "refFormQuestions",
+                widths=[5, 26, 18, 10, 100, 18])
 
     ws = wb.create_sheet("Statuses")
     brand_sheet(ws, title)
@@ -418,7 +428,7 @@ def build_docx():
     hp = sec.header.paragraphs[0]
     set_font(hp.add_run("Greater Good Health  |  HR Change + Orchestration — Build Blueprint"), size=8.5, color=FOREST)
     fp = sec.footer.paragraphs[0]
-    set_font(fp.add_run("People Ops · internal · v2.0"), size=8, color=CHAR)
+    set_font(fp.add_run("People Ops · internal · v3.0"), size=8, color=CHAR)
 
     def para(text="", bold=False, italic=False, color=CHAR, size=None, style=None):
         p = doc.add_paragraph(style=style)
@@ -471,10 +481,10 @@ def build_docx():
         doc.add_paragraph()
     para("HR Change + Orchestration", bold=True, italic=True, color=PLUM, size=34).runs[0].font.name = "Asap Condensed"
     para("Build Blueprint", color=FOREST, size=20).runs[0].font.name = "Comfortaa"
-    para("One SharePoint list · Excel reference tables · Approvals · Slack visibility", color=CHAR, size=12)
+    para("One form · one SharePoint list · Excel reference tables · Approvals · Slack visibility", color=CHAR, size=12)
     doc.add_paragraph()
     table(["", ""], [["Owner", "CJ"], ["Primary executor", "Johanna"], ["Reference", "Project 10k: People Team Owned Automations — Steps 5, 5b, 6"],
-                     ["Version", "2.0 — replaces the Slack List design and the five-list v1 build"], ["Status", "Ready to start Sprint 0"]], widths=[4.5, 12.5], header=False)
+                     ["Version", "3.0 — core-column list, general HR request types, Microsoft Form front door"], ["Status", "Ready to start Sprint 0"]], widths=[4.5, 12.5], header=False)
     page_break()
 
     # ---- 1 how to use
@@ -485,7 +495,7 @@ def build_docx():
         ["HR Change Blueprint.docx", "This document — the step-by-step build", "Wherever you read it"],
         ["HR Change Build Blueprint.xlsx", "Tracker: roadmap with dates, every step with a status, gates, test pack, decisions", "Your working files"],
         [D.REF_FILE, "The reference tables the flows read: Settings, Change Types, Checklists, Approvers (+ list field reference)", "People Ops site → Documents → HR Change"],
-        ["HR-Change-Requests.csv", "Creates the one SharePoint list", "Upload once in Sprint 0"],
+        ["HR-Change-Requests.csv", "Creates the one SharePoint list (core columns)", "Upload once in Sprint 0"],
     ], widths=[5, 7.5, 4.5])
     doc.add_heading("Conventions in every flow step", 3)
     for b in [
@@ -501,11 +511,14 @@ def build_docx():
     # ---- 2 architecture
     page_break()
     doc.add_heading("2. What we're building", 1)
-    para("The project plan, rebuilt on Microsoft 365: the HR Change Slack List becomes ONE SharePoint list; the master templates, SLAs and approval "
-         "matrix become tables in one Excel workbook; Power Automate does the orchestration; Slack stays where people see what's happening.")
+    para("The project plan, rebuilt on Microsoft 365 for the whole HR team: one Microsoft Form is the front door; ONE SharePoint list with the core "
+         "service-desk columns is the system of record; anything specific to a request lives in its Description and its sub-step Checklist; "
+         "the templates, SLAs and approval matrix are tables in one Excel workbook; Slack stays where people see what's happening.")
     table(["Layer", "Plan (Slack design)", "This build"], [
-        ["Front door", "Slack Workflow Builder form", "List New form, pinned in #lane-people-talent (D3)"],
-        ["System of record", "HR Change Slack List", f"SharePoint list '{D.LIST_NAME}' — the only list"],
+        ["Front door", "Slack Workflow Builder form", f"Microsoft Form '{D.FORM_NAME}', pinned in #lane-people-talent (D3)"],
+        ["System of record", "HR Change Slack List", f"SharePoint list '{D.LIST_NAME}' — core columns only, HR-only (D2)"],
+        ["Request types", "A1–I (HR changes)", "16 general HR types + Other, in five groups (D4)"],
+        ["Type-specific fields", "Conditional form fields", "Description + the type's 'info needed' prompt"],
         ["Templates / SOP", "Master template items on the list", "Checklists table in the reference workbook"],
         ["Checklist delivery", "Message in the item thread", "Item comment (thread) + editable Checklist field with progress %"],
         ["Approvals", "Text steps / Slack DMs", "Power Automate Approvals, sequential, from the approval chain table"],
@@ -513,14 +526,14 @@ def build_docx():
     ], widths=[3.2, 5.8, 8])
     doc.add_heading("The seven flows", 2)
     table(["Flow", "Plan reference", "Trigger", "What it does", "Sprint"], [
-        ["1 Intake Notification", "Flow 1", "Item created", "Request ID + title, SLA due date, pay period/cutoff flag (I), default assignee, 📥 comment, People Ops ping, confirmation email", "S1"],
-        ["2 Checklist Router", "Flow 2 (10 paths + Other)", "Item created", "Reads this type's steps from Excel, writes the Checklist field, posts the checklist comment; Other → 'needs manual scoping'", "S1"],
-        ["3 Payroll Notification", "Flow 3 (Template I only)", "Item modified → I resolved", "One-way FYI to the Payroll room; stamps Payroll Notified On", "S2"],
-        ["4 Completion Auto-Comment", "Completion auto-comment", "Item modified → 3-Resolved", "Stamps Completion Date, ticks 'resolution' steps, ✅ comment, close-the-loop email, optional People Ops summary", "S1"],
-        ["5 Approval Routing", "Approval matrix (B, C, F, I)", "Item created", "Sequential approvals from the chain; history + comments; unlocks 🔒 steps or closes as Rejected", "S2–S3"],
-        ["6 Checklist Progress", "Phase 2 progress bar", "Item modified", "Checklist % and Next Action from the [ ]/[x] ticks; 'ready to resolve' ping", "S3"],
-        ["7 Daily Digest + Cutoff Reminder", "Nice-to-add + Phase 3 dashboard", "Daily 8:00", "SLA / next-action / exceptions digest; extra-shift reminder before each payroll cutoff", "S4"],
-    ], widths=[3.4, 3.2, 2.8, 6.4, 1.2], font_size=8.5)
+        ["0 Form Intake", "Layer 1 intake", "Form response", "Copies the answers into a new list item (requester, employee, manager, category, effective date, description)", "S1"],
+        ["1 Intake Notification", "Flow 1", "Item created", "Ticket reference + title, priority default, received date, SLA, pay period/cutoff (XPAY), default assignee, 📥 comment, People Ops ping, confirmation email with 'info needed'", "S1"],
+        ["2 Checklist Router", "Flow 2 (+ Other catch-all)", "Item created", "Reads this type's sub-steps from Excel, writes the Checklist field, posts them to the thread; OTHER → 'needs manual scoping'", "S1"],
+        ["3 Case Updates", "Phase 2 progress", "Item modified", "First human response stamp; Checklist % and Next Action from the [ ]/[x] ticks; 'ready to resolve' ping", "S1"],
+        ["4 Close-out", "Completion auto-comment + Flow 3", "Item modified → 3-Resolved", "Closed Date, ticks 'resolution' steps, ✅ comment, close-the-loop email, People Ops summary, Payroll FYI (XPAY)", "S1–S2"],
+        ["5 Approval Routing", "Approval matrix", "Item created", "Sequential approvals from the chain; decisions to thread + Internal Notes; unlocks 🔒 steps or closes as Rejected", "S2–S3"],
+        ["6 Daily Digest + Cutoff Reminder", "Nice-to-add + Phase 3 dashboard", "Daily 8:00", "New / SLA / next action / waiting / exceptions digest; extra-pay reminder before each payroll cutoff", "S4"],
+    ], widths=[3.2, 3.0, 2.6, 6.6, 1.6], font_size=8.5)
     para("Why separate flows: as the plan says for Flow 2, a failure in one shouldn't take down another — and each one is small enough to build and test in a sitting.", italic=True)
 
     # ---- 3 decisions
@@ -596,9 +609,17 @@ def build_docx():
     doc.add_heading("Appendix G — Dependencies", 1)
     table(["Item", "Owner", "Status", "Needed by"], [list(x[:4]) for x in D.DEPENDENCIES], widths=[9, 3, 3, 2])
     doc.add_heading(f"Appendix H — The one list: {D.LIST_NAME}", 1)
-    para("Full detail (choices, show formulas) is on the List Fields tab of the reference workbook.", italic=True)
-    table(["Internal name", "Type", "Req.", "Group", "Show for", "Set by"], [[f[0], f[2], f[3], f[5], f[6], f[7]] for f in D.FIELDS],
-          widths=[3.4, 3.2, 1, 1.9, 1.6, 5.9], font_size=8)
+    para("Core columns only. Choices are on the List Fields tab of the reference workbook.", italic=True)
+    table(["Internal name", "Display name", "Type", "Source", "Set by"], [[f[0], f[1], f[2], f[4], f[5]] for f in D.FIELDS],
+          widths=[3.2, 3.2, 3.4, 2.4, 4.8], font_size=8)
+    para("Inspiration columns left out on purpose:", bold=True, color=FOREST)
+    for o in D.OMITTED_CORE:
+        bullet(f"{o[0]} — {o[1]}")
+    doc.add_heading(f"Appendix I — The front-door form", 1)
+    table(["#", "Question", "Type", "Req.", "Notes", "List column"], [list(q) for q in D.FORM_QUESTIONS], widths=[0.7, 3, 2.2, 1, 7.5, 2.6], font_size=8)
+    doc.add_heading("Appendix J — Request types", 1)
+    table(["Code", "Category", "Group", "Priority", "SLA", "Plan ref"], [[c[0], c[1], c[2], c[3], c[6], c[14]] for c in D.CHANGE_TYPES],
+          widths=[1.4, 5.6, 3, 2.2, 3.6, 1.2], font_size=8)
 
     path = os.path.join(OUT, "HR Change Blueprint.docx")
     doc.save(path)

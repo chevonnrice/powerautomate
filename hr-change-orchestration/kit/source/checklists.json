@@ -1,6 +1,6 @@
 [
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "01",
   "Task": "Confirm last day and exit reason",
   "Details": "Capture: resignation, end of contract, or mutual separation",
@@ -11,7 +11,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "02",
   "Task": "Obtain resignation letter from manager → save to HR file",
   "Details": "",
@@ -22,7 +22,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "03",
   "Task": "Acknowledge receipt to manager; send link to New Req Request form (backfill)",
   "Details": "",
@@ -33,7 +33,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "04",
   "Task": "Forward resignation letter to relevant People leadership",
   "Details": "",
@@ -44,7 +44,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "05",
   "Task": "Schedule exit interview",
   "Details": "",
@@ -55,7 +55,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "06",
   "Task": "Send change-in-relationship notice as PDF to employee; file copy into HR file",
   "Details": "",
@@ -66,7 +66,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "07",
   "Task": "Add to Monday payroll board — final pay and PTO payout",
   "Details": "",
@@ -77,7 +77,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "08",
   "Task": "Notify offboarding distro",
   "Details": "Triggers: Tech ticket to Methodology (access revocation) • Credentialing team deactivates in Medallion • ICS confirms whether client-issued equipment needs return • Equipment return materials sent if applicable (client included if embedded)",
@@ -88,7 +88,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "09",
   "Task": "Create Jira ticket → access revocation + equipment retrieval (IT)",
   "Details": "Paste the ticket link into the request's Jira link field",
@@ -99,7 +99,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "10",
   "Task": "Remove from Joon / BetterHelp",
   "Details": "",
@@ -110,7 +110,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "11",
   "Task": "Terminate in Paycor — on last day only (do not enter early; date may shift)",
   "Details": "",
@@ -121,7 +121,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "12",
   "Task": "Update Employee List",
   "Details": "",
@@ -132,7 +132,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "13",
   "Task": "Move HR folder to Termed (PC entity or LLC entity per applicable structure)",
   "Details": "",
@@ -143,7 +143,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "14",
   "Task": "Track equipment return",
   "Details": "",
@@ -154,7 +154,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "15",
   "Task": "Send exit interview feedback to manager / People leadership",
   "Details": "",
@@ -165,7 +165,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A1",
+  "Code": "OFF-V",
   "Step": "16",
   "Task": "Confirm completion → post summary to HR intake channel",
   "Details": "",
@@ -176,7 +176,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "01",
   "Task": "Confirm last day and exit reason",
   "Details": "Capture: termination, reduction in force, end of contract (non-renewed), or performance-based",
@@ -187,7 +187,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "02",
   "Task": "Notify offboarding distro",
   "Details": "Triggers: Tech ticket to Methodology (access revocation — timing-sensitive, coordinate with last day) • Credentialing team deactivates in Medallion • ICS confirms whether client-issued equipment needs return • Equipment return materials sent if applicable (client included if embedded)",
@@ -198,7 +198,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "03",
   "Task": "Create Jira ticket → access revocation + equipment retrieval (IT)",
   "Details": "Paste the ticket link into the request's Jira link field",
@@ -209,7 +209,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "04",
   "Task": "Generate termination letter (Word template) → send to employee with letter attached",
   "Details": "",
@@ -220,7 +220,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "05",
   "Task": "Send change-in-relationship notice as PDF to employee; file copy into HR file",
   "Details": "",
@@ -231,7 +231,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "06",
   "Task": "Add to Monday payroll board — final pay and PTO payout",
   "Details": "",
@@ -242,7 +242,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "07",
   "Task": "Remove from Joon / BetterHelp",
   "Details": "",
@@ -253,7 +253,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "08",
   "Task": "Terminate in Paycor — on last day only (do not enter early; date may shift)",
   "Details": "",
@@ -264,7 +264,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "09",
   "Task": "Update Employee List",
   "Details": "",
@@ -275,7 +275,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "10",
   "Task": "Move HR folder to Termed (PC entity or LLC entity per applicable structure)",
   "Details": "",
@@ -286,7 +286,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "11",
   "Task": "Track equipment return",
   "Details": "",
@@ -297,7 +297,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "A2",
+  "Code": "OFF-I",
   "Step": "12",
   "Task": "Confirm completion → post summary to HR intake channel",
   "Details": "",
@@ -308,7 +308,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "B",
+  "Code": "JOB",
   "Step": "01",
   "Task": "Confirm new title, department, location, FT/PT/PRN status",
   "Details": "",
@@ -319,7 +319,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "B",
+  "Code": "JOB",
   "Step": "02",
   "Task": "Route approval request → manager + Regional (per approval matrix)",
   "Details": "Automatic: HR Change - 3 Approvals",
@@ -330,7 +330,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "B",
+  "Code": "JOB",
   "Step": "03",
   "Task": "On approval: update Paycor",
   "Details": "",
@@ -341,7 +341,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "B",
+  "Code": "JOB",
   "Step": "04",
   "Task": "Trigger Directory sync (Step 2, Project 10k)",
   "Details": "",
@@ -352,7 +352,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "B",
+  "Code": "JOB",
   "Step": "05",
   "Task": "Close-the-loop email to requestor",
   "Details": "",
@@ -363,7 +363,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "B",
+  "Code": "JOB",
   "Step": "06",
   "Task": "Mark list item complete",
   "Details": "",
@@ -374,7 +374,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "C",
+  "Code": "COMP",
   "Step": "01",
   "Task": "Confirm new rate, effective pay period",
   "Details": "",
@@ -385,7 +385,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "C",
+  "Code": "COMP",
   "Step": "02",
   "Task": "Route approval → manager, Regional, HR (per approval matrix)",
   "Details": "Automatic: HR Change - 3 Approvals",
@@ -396,7 +396,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "C",
+  "Code": "COMP",
   "Step": "03",
   "Task": "On approval: notify payroll via email or Monday payroll board post",
   "Details": "",
@@ -407,7 +407,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "C",
+  "Code": "COMP",
   "Step": "04",
   "Task": "Update Paycor",
   "Details": "",
@@ -418,7 +418,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "C",
+  "Code": "COMP",
   "Step": "05",
   "Task": "Close-the-loop email to requestor",
   "Details": "",
@@ -429,7 +429,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "C",
+  "Code": "COMP",
   "Step": "06",
   "Task": "Mark list item complete",
   "Details": "",
@@ -440,7 +440,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "D",
+  "Code": "PAY",
   "Step": "01",
   "Task": "Flag for manual verification → DM CJ or Johanna",
   "Details": "",
@@ -451,7 +451,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "D",
+  "Code": "PAY",
   "Step": "02",
   "Task": "Verify supporting documentation received",
   "Details": "",
@@ -462,7 +462,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "D",
+  "Code": "PAY",
   "Step": "03",
   "Task": "Execute change in Paycor",
   "Details": "",
@@ -473,7 +473,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "D",
+  "Code": "PAY",
   "Step": "04",
   "Task": "Log verification + completion to list item",
   "Details": "",
@@ -484,7 +484,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "D",
+  "Code": "PAY",
   "Step": "05",
   "Task": "Close-the-loop to requestor",
   "Details": "",
@@ -495,7 +495,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "D",
+  "Code": "PAY",
   "Step": "06",
   "Task": "Mark list item complete",
   "Details": "",
@@ -506,7 +506,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "E",
+  "Code": "DATA",
   "Step": "01",
   "Task": "Confirm field(s) changing and new value",
   "Details": "",
@@ -517,7 +517,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "E",
+  "Code": "DATA",
   "Step": "02",
   "Task": "Update in Paycor",
   "Details": "",
@@ -528,7 +528,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "E",
+  "Code": "DATA",
   "Step": "03",
   "Task": "Log completion to list item",
   "Details": "",
@@ -539,7 +539,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "E",
+  "Code": "DATA",
   "Step": "04",
   "Task": "Close-the-loop to requestor",
   "Details": "",
@@ -550,7 +550,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "E",
+  "Code": "DATA",
   "Step": "05",
   "Task": "Mark list item complete",
   "Details": "",
@@ -561,7 +561,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "F",
+  "Code": "PTO",
   "Step": "01",
   "Task": "Confirm request type, dates, hours",
   "Details": "",
@@ -572,7 +572,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "F",
+  "Code": "PTO",
   "Step": "02",
   "Task": "Route to manager for approval",
   "Details": "Automatic: HR Change - 3 Approvals (replaces the Slack DM step)",
@@ -583,7 +583,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "F",
+  "Code": "PTO",
   "Step": "03",
   "Task": "On approval: log in Paycor",
   "Details": "",
@@ -594,7 +594,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "F",
+  "Code": "PTO",
   "Step": "04",
   "Task": "Close-the-loop to requestor",
   "Details": "",
@@ -605,7 +605,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "F",
+  "Code": "PTO",
   "Step": "05",
   "Task": "Mark list item complete",
   "Details": "",
@@ -616,7 +616,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "G",
+  "Code": "LOA",
   "Step": "01",
   "Task": "Confirm leave type, start date, expected return",
   "Details": "",
@@ -627,7 +627,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "G",
+  "Code": "LOA",
   "Step": "02",
   "Task": "Verify documentation received",
   "Details": "",
@@ -638,7 +638,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "G",
+  "Code": "LOA",
   "Step": "03",
   "Task": "Route to CJ for case management setup",
   "Details": "",
@@ -649,7 +649,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "G",
+  "Code": "LOA",
   "Step": "04",
   "Task": "Notify payroll of leave dates",
   "Details": "",
@@ -660,7 +660,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "G",
+  "Code": "LOA",
   "Step": "05",
   "Task": "Update Paycor",
   "Details": "",
@@ -671,7 +671,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "G",
+  "Code": "LOA",
   "Step": "06",
   "Task": "Log to list item with return date noted",
   "Details": "Keep 'End / expected return' current on the request - the daily digest flags returns due within 7 days",
@@ -682,7 +682,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "G",
+  "Code": "LOA",
   "Step": "07",
   "Task": "Keep item open (1-Assigned) until return confirmed",
   "Details": "Only set 3-Resolved once the return is confirmed",
@@ -693,7 +693,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "H",
+  "Code": "BEN",
   "Step": "01",
   "Task": "Confirm event type and qualifying date",
   "Details": "",
@@ -704,7 +704,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "H",
+  "Code": "BEN",
   "Step": "02",
   "Task": "Verify documentation received",
   "Details": "",
@@ -715,7 +715,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "H",
+  "Code": "BEN",
   "Step": "03",
   "Task": "Route to benefits team or process in Employee Navigator",
   "Details": "",
@@ -726,7 +726,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "H",
+  "Code": "BEN",
   "Step": "04",
   "Task": "Confirm enrollment/change effective",
   "Details": "",
@@ -737,7 +737,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "H",
+  "Code": "BEN",
   "Step": "05",
   "Task": "Close-the-loop to requestor",
   "Details": "",
@@ -748,7 +748,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "H",
+  "Code": "BEN",
   "Step": "06",
   "Task": "Mark list item complete",
   "Details": "",
@@ -759,7 +759,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "I",
+  "Code": "XPAY",
   "Step": "01",
   "Task": "HR approval: review against predetermined criteria",
   "Details": "Rate validity, hours/dates make sense, within policy. Automatic: HR Change - 3 Approvals",
@@ -770,7 +770,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "I",
+  "Code": "XPAY",
   "Step": "02",
   "Task": "Earning setup: add a single event earning in Paycor",
   "Details": "Rate type (hourly vs. flat day rate) drives which earning code is used",
@@ -781,7 +781,7 @@
   "Active": "Yes"
  },
  {
-  "Code": "I",
+  "Code": "XPAY",
   "Step": "03",
   "Task": "Confirm the earning is logged against the correct pay period",
   "Details": "Check Pay period / Submitted after cutoff on the request",
@@ -792,13 +792,431 @@
   "Active": "Yes"
  },
  {
-  "Code": "I",
+  "Code": "XPAY",
   "Step": "04",
   "Task": "Mark list item complete (3-Resolved) once the earning is entered",
   "Details": "Payroll is then notified automatically to verify in Paycor. They are a verifier, not a gate",
   "Owner": "HR",
   "Auto": "resolution",
   "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "01",
+  "Task": "Confirm start date, title, department, location, manager and FT/PT/PRN",
+  "Details": "From the Description; ask the requester for anything missing",
+  "Owner": "HR",
+  "Auto": "HR",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "02",
+  "Task": "Send new-hire paperwork and I-9 instructions",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "03",
+  "Task": "Enter the new hire in Paycor",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "04",
+  "Task": "Request accounts and equipment (Jira → IT)",
+  "Details": "Due before the start date",
+  "Owner": "IT",
+  "Auto": "",
+  "AfterApproval": "HR",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "05",
+  "Task": "Start credentialing in Medallion (clinical roles)",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "06",
+  "Task": "Enroll in Joon / BetterHelp and benefits",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "07",
+  "Task": "Add to the Employee List and create the HR folder",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "08",
+  "Task": "Share the first-week plan with the manager",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "09",
+  "Task": "Close-the-loop to requestor",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ONB",
+  "Step": "10",
+  "Task": "Mark list item complete",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "VER",
+  "Step": "01",
+  "Task": "Confirm what's needed, the deadline and the signed authorization",
+  "Details": "Third-party requests need the employee's signed release",
+  "Owner": "HR",
+  "Auto": "HR",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "VER",
+  "Step": "02",
+  "Task": "Verify details in Paycor",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "VER",
+  "Step": "03",
+  "Task": "Complete the verification or letter",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "VER",
+  "Step": "04",
+  "Task": "Send it securely and file a copy in the HR file",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "VER",
+  "Step": "05",
+  "Task": "Close-the-loop to requestor",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "VER",
+  "Step": "06",
+  "Task": "Mark list item complete",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "POL",
+  "Step": "01",
+  "Task": "Confirm the question",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "POL",
+  "Step": "02",
+  "Task": "Check the handbook / policy",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "POL",
+  "Step": "03",
+  "Task": "Escalate to People leadership if the policy doesn't cover it",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "POL",
+  "Step": "04",
+  "Task": "Reply to the requester",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "POL",
+  "Step": "05",
+  "Task": "Mark list item complete",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ER",
+  "Step": "01",
+  "Task": "Acknowledge the person personally within 1 business day",
+  "Details": "A human reply, not just the automatic confirmation",
+  "Owner": "CJ",
+  "Auto": "",
+  "AfterApproval": "HR",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ER",
+  "Step": "02",
+  "Task": "Route to CJ for case management",
+  "Details": "",
+  "Owner": "CJ",
+  "Auto": "",
+  "AfterApproval": "HR",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ER",
+  "Step": "03",
+  "Task": "Move details into the restricted case file",
+  "Details": "Keep this list item to a summary only — no case detail here",
+  "Owner": "CJ",
+  "Auto": "",
+  "AfterApproval": "HR",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ER",
+  "Step": "04",
+  "Task": "Agree next steps (conversation, mediation, investigation)",
+  "Details": "",
+  "Owner": "CJ",
+  "Auto": "",
+  "AfterApproval": "HR",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "ER",
+  "Step": "05",
+  "Task": "Document the outcome in the case file, then resolve here",
+  "Details": "",
+  "Owner": "CJ",
+  "Auto": "",
+  "AfterApproval": "HR",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "TRN",
+  "Step": "01",
+  "Task": "Confirm the training, license or credential and its due date",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "TRN",
+  "Step": "02",
+  "Task": "Enroll / assign",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "TRN",
+  "Step": "03",
+  "Task": "Track completion",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "TRN",
+  "Step": "04",
+  "Task": "Update the record (Medallion / training log)",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "TRN",
+  "Step": "05",
+  "Task": "Close-the-loop to requestor",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "TRN",
+  "Step": "06",
+  "Task": "Mark list item complete",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "REQ",
+  "Step": "01",
+  "Task": "Confirm role, new vs backfill, department and target start",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "",
+  "AfterApproval": "No",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "REQ",
+  "Step": "02",
+  "Task": "Route approval (per approval matrix)",
+  "Details": "Switched on when the matrix is signed off",
+  "Owner": "HR",
+  "Auto": "approval",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "REQ",
+  "Step": "03",
+  "Task": "Send to Talent via the New Req Request form",
+  "Details": "",
+  "Owner": "Talent",
+  "Auto": "",
+  "AfterApproval": "Yes",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "REQ",
+  "Step": "04",
+  "Task": "Confirm the req is open on Monday",
+  "Details": "",
+  "Owner": "Talent",
+  "Auto": "",
+  "AfterApproval": "Yes",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "REQ",
+  "Step": "05",
+  "Task": "Close-the-loop to requestor",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
+  "DueOnLastDay": "No",
+  "Active": "Yes"
+ },
+ {
+  "Code": "REQ",
+  "Step": "06",
+  "Task": "Mark list item complete",
+  "Details": "",
+  "Owner": "HR",
+  "Auto": "resolution",
+  "AfterApproval": "",
   "DueOnLastDay": "No",
   "Active": "Yes"
  }
