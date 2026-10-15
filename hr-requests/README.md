@@ -31,5 +31,5 @@ The simple version of the HR Change + Orchestration plan: built entirely in the 
 
 ## Earlier designs
 
-`archive/` keeps the five-list build (v1-five-lists) and the full sprint kit (v3-full-kit) for reference.
+`archive/` keeps the five-list build (`five-lists`, packed solution only) and the full sprint kit (`sprint-kit`) for reference.
 `v1/source/build_v1.py` regenerates the three files above. You don't need to run it to build the solution.

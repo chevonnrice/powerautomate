@@ -1,4 +1,6 @@
 > **Superseded.** This five-list build is kept for reference only. The current design (one SharePoint list + Excel reference tables) is in [`../../README.md`](../../README.md).
+> The unpacked `sourcecode/` folder was removed to keep paths short for Windows; the packed solution is in `solution/` and the source is in git history.
+
 
 # HR Change + Orchestration (SharePoint list + Approvals)
 

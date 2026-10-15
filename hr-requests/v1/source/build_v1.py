@@ -26,7 +26,7 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.normpath(os.path.join(HERE, ".."))
-ARCHIVE_CHECKLISTS = os.path.join(HERE, "..", "..", "archive", "v3-full-kit", "source", "checklists.json")
+ARCHIVE_CHECKLISTS = os.path.join(HERE, "..", "..", "archive", "sprint-kit", "source", "checklists.json")
 
 LIST = "HR Requests"
 XLSX = "HR Request Types.xlsx"
