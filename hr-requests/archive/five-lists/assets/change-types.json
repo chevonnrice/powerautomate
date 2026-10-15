@@ -1,0 +1,23 @@
+{
+  "description": "Seed rows for the HR Change Types list. One row per Change Type value (Title must match the choice text exactly). HR edits this list to change SLAs, approval chains and notifications. No flow edits needed.",
+  "approvalStages": ["Manager", "Regional", "HR", "Payroll"],
+  "dueDateRules": ["Business days after submission", "Effective date", "None"],
+  "changeTypes": [
+    { "Title": "A1 — Offboarding (Voluntary)", "Code": "A1", "DueDateRule": "Effective date", "SLABusinessDays": null, "SLALabel": "Same day intake, executed by last day", "ApprovalStage1": null, "ApprovalStage2": null, "ApprovalStage3": null, "DefaultAssigneeEmail": "", "CloseLoopEmail": false, "PostSummaryToIntake": true, "NotifyPayrollOnResolve": false },
+    { "Title": "A2 — Offboarding (Involuntary)", "Code": "A2", "DueDateRule": "Effective date", "SLABusinessDays": null, "SLALabel": "Same day intake, executed by last day", "ApprovalStage1": null, "ApprovalStage2": null, "ApprovalStage3": null, "DefaultAssigneeEmail": "", "CloseLoopEmail": false, "PostSummaryToIntake": true, "NotifyPayrollOnResolve": false },
+    { "Title": "B — Job / Status Change", "Code": "B", "DueDateRule": "Business days after submission", "SLABusinessDays": 3, "SLALabel": "2–3 business days", "ApprovalStage1": "Manager", "ApprovalStage2": "Regional", "ApprovalStage3": null, "DefaultAssigneeEmail": "", "CloseLoopEmail": true, "PostSummaryToIntake": false, "NotifyPayrollOnResolve": false },
+    { "Title": "C — Comp Change", "Code": "C", "DueDateRule": "Business days after submission", "SLABusinessDays": 5, "SLALabel": "3–5 business days", "ApprovalStage1": "Manager", "ApprovalStage2": "Regional", "ApprovalStage3": "HR", "DefaultAssigneeEmail": "", "CloseLoopEmail": true, "PostSummaryToIntake": false, "NotifyPayrollOnResolve": false },
+    { "Title": "D — Pay / Banking Change", "Code": "D", "DueDateRule": "Business days after submission", "SLABusinessDays": 2, "SLALabel": "1–2 business days", "ApprovalStage1": null, "ApprovalStage2": null, "ApprovalStage3": null, "DefaultAssigneeEmail": "", "CloseLoopEmail": true, "PostSummaryToIntake": false, "NotifyPayrollOnResolve": false },
+    { "Title": "E — Personal Data Change", "Code": "E", "DueDateRule": "Business days after submission", "SLABusinessDays": 1, "SLALabel": "1 business day", "ApprovalStage1": null, "ApprovalStage2": null, "ApprovalStage3": null, "DefaultAssigneeEmail": "", "CloseLoopEmail": true, "PostSummaryToIntake": false, "NotifyPayrollOnResolve": false },
+    { "Title": "F — Time / PTO", "Code": "F", "DueDateRule": "Business days after submission", "SLABusinessDays": 2, "SLALabel": "1–2 business days", "ApprovalStage1": "Manager", "ApprovalStage2": null, "ApprovalStage3": null, "DefaultAssigneeEmail": "", "CloseLoopEmail": true, "PostSummaryToIntake": false, "NotifyPayrollOnResolve": false },
+    { "Title": "G — LOA", "Code": "G", "DueDateRule": "None", "SLABusinessDays": null, "SLALabel": "Per policy", "ApprovalStage1": null, "ApprovalStage2": null, "ApprovalStage3": null, "DefaultAssigneeEmail": "cj@contoso.com", "CloseLoopEmail": false, "PostSummaryToIntake": false, "NotifyPayrollOnResolve": false },
+    { "Title": "H — Benefits / Life Event", "Code": "H", "DueDateRule": "Business days after submission", "SLABusinessDays": 3, "SLALabel": "2–3 business days", "ApprovalStage1": null, "ApprovalStage2": null, "ApprovalStage3": null, "DefaultAssigneeEmail": "", "CloseLoopEmail": true, "PostSummaryToIntake": false, "NotifyPayrollOnResolve": false },
+    { "Title": "I — Fractional FTE / Extra Shift Pickup", "Code": "I", "DueDateRule": "Business days after submission", "SLABusinessDays": 2, "SLALabel": "Before the payroll cutoff", "ApprovalStage1": "HR", "ApprovalStage2": null, "ApprovalStage3": null, "DefaultAssigneeEmail": "", "CloseLoopEmail": false, "PostSummaryToIntake": false, "NotifyPayrollOnResolve": true },
+    { "Title": "Other", "Code": "Other", "DueDateRule": "None", "SLABusinessDays": null, "SLALabel": "Needs manual scoping", "ApprovalStage1": null, "ApprovalStage2": null, "ApprovalStage3": null, "DefaultAssigneeEmail": "", "CloseLoopEmail": true, "PostSummaryToIntake": false, "NotifyPayrollOnResolve": false }
+  ],
+  "approvalMatrix": [
+    { "Title": "Regional approver - default", "Role": "Regional", "Region": "*", "ApproverEmail": "regional.director@contoso.com", "Active": true },
+    { "Title": "HR approver", "Role": "HR", "Region": "*", "ApproverEmail": "cj@contoso.com", "Active": true },
+    { "Title": "Payroll approver (only if Payroll is added as a stage)", "Role": "Payroll", "Region": "*", "ApproverEmail": "payroll@contoso.com", "Active": true }
+  ]
+}

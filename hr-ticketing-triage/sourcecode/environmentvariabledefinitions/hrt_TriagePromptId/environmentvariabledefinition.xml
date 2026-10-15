@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="hrt_TriagePromptId">
+  <defaultvalue>00000000-0000-0000-0000-000000000000</defaultvalue>
+  <description default="Id of the AI Builder / Copilot prompt 'HR Inbox Triage'">
+    <label description="Id of the AI Builder / Copilot prompt 'HR Inbox Triage'" languagecode="1033" />
+  </description>
+  <displayname default="HR Triage Prompt Id">
+    <label description="HR Triage Prompt Id" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

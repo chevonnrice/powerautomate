@@ -1,0 +1,2 @@
+﻿Title,Category,Status,Priority,RequesterEmail,EmployeeName,Description,DueDate,NextAction,Checklist,ClosedDate,ConversationId
+SAMPLE - delete after import,Employee Data Update,0-New,Routine,someone@yourcompany.com,Sample Employee,Sample row - delete,2026-10-15,Confirm field(s) changing and new value,[ ] Sample step,2026-10-15,sample

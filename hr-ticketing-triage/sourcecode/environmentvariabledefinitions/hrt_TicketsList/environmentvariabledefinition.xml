@@ -1,0 +1,18 @@
+<environmentvariabledefinition schemaname="hrt_TicketsList">
+  <apiid>/providers/microsoft.powerapps/apis/shared_sharepointonline</apiid>
+  <description default="The HR Tickets list">
+    <label description="The HR Tickets list" languagecode="1033" />
+  </description>
+  <displayname default="HR Tickets List">
+    <label description="HR Tickets List" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <parameterkey>table</parameterkey>
+  <parentdefinitionid>
+    <schemaname>hrt_SPSite</schemaname>
+  </parentdefinitionid>
+  <secretstore>0</secretstore>
+  <type>100000004</type>
+</environmentvariabledefinition>

@@ -1,0 +1,1159 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrt_Office365Outlook"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrt_SharePoint"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_commondataserviceforapps": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrt_Dataverse"
+        },
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      },
+      "shared_conversionservice": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hrt_ContentConversion"
+        },
+        "api": {
+          "name": "shared_conversionservice"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "HR Shared Mailbox (hrt_SharedMailbox)": {
+          "defaultValue": "hr@contoso.com",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrt_SharedMailbox"
+          }
+        },
+        "HR SharePoint Site (hrt_SPSite)": {
+          "defaultValue": "https://contoso.sharepoint.com/sites/HR",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrt_SPSite"
+          }
+        },
+        "HR Tickets List (hrt_TicketsList)": {
+          "defaultValue": "HR Tickets",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrt_TicketsList"
+          }
+        },
+        "HR Triage Log List (hrt_TriageLogList)": {
+          "defaultValue": "HR Triage Log",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrt_TriageLogList"
+          }
+        },
+        "HR Triage Prompt Id (hrt_TriagePromptId)": {
+          "defaultValue": "00000000-0000-0000-0000-000000000000",
+          "type": "String",
+          "metadata": {
+            "schemaName": "hrt_TriagePromptId"
+          }
+        },
+        "HR Triage Settings (hrt_TriageSettings)": {
+          "defaultValue": {
+            "confidenceThreshold": 0.7,
+            "maxBodyChars": 6000,
+            "ticketPrefix": "HR-",
+            "templateSubjectKeyword": "HR Request",
+            "sendAcknowledgement": true,
+            "copyAttachments": true,
+            "moveEmails": true,
+            "logDecisions": true,
+            "folders": {
+              "ticketed": "<folder id of Inbox/Triage - Ticketed>",
+              "noAction": "<folder id of Inbox/Triage - No Action>",
+              "review": "<folder id of Inbox/Triage - Review>"
+            },
+            "ignoreSenderPatterns": [
+              "noreply",
+              "no-reply",
+              "donotreply",
+              "do-not-reply",
+              "mailer-daemon",
+              "postmaster",
+              "notifications@",
+              "newsletter"
+            ],
+            "ignoreSubjectPrefixes": [
+              "automatic reply",
+              "auto-reply",
+              "autoreply",
+              "out of office",
+              "undeliverable",
+              "delivery status notification",
+              "delivery has failed",
+              "accepted:",
+              "declined:",
+              "tentative:",
+              "canceled:",
+              "read:",
+              "recall:"
+            ],
+            "categories": [
+              "Payroll",
+              "Benefits",
+              "Leave & Absence",
+              "Onboarding",
+              "Offboarding",
+              "Employee Relations",
+              "Policy Question",
+              "Employment Verification",
+              "Personal Data Change",
+              "Recruiting",
+              "Training",
+              "Other"
+            ],
+            "routing": {
+              "Payroll": "payroll.specialist@contoso.com",
+              "Benefits": "benefits.specialist@contoso.com",
+              "Leave & Absence": "benefits.specialist@contoso.com",
+              "Onboarding": "hr.generalist@contoso.com",
+              "Offboarding": "hr.generalist@contoso.com",
+              "Employee Relations": "hr.business.partner@contoso.com",
+              "Employment Verification": "hr.coordinator@contoso.com",
+              "Personal Data Change": "hr.coordinator@contoso.com",
+              "Recruiting": "talent.acquisition@contoso.com",
+              "default": "hr.coordinator@contoso.com"
+            },
+            "sensitiveAssignee": "hr.director@contoso.com",
+            "slaHours": {
+              "Urgent": 4,
+              "High": 24,
+              "Medium": 72,
+              "Low": 120
+            },
+            "adminEmail": "hr.ops@contoso.com",
+            "digestRecipients": "hr-team@contoso.com",
+            "autoCloseResolvedAfterDays": 5
+          },
+          "type": "Object",
+          "metadata": {
+            "schemaName": "hrt_TriageSettings"
+          }
+        }
+      },
+      "triggers": {
+        "When_a_new_email_arrives_in_the_HR_shared_mailbox": {
+          "recurrence": {
+            "interval": 1,
+            "frequency": "Minute"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_office365",
+              "operationId": "SharedMailboxOnNewEmailV2",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+            },
+            "parameters": {
+              "mailboxAddress": "@parameters('HR Shared Mailbox (hrt_SharedMailbox)')",
+              "folderId": "Inbox",
+              "importance": "Any",
+              "fetchOnlyWithAttachment": false,
+              "includeAttachments": true
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "description": "Concurrency is 1 so two replies on the same thread can never race into duplicate tickets."
+        }
+      },
+      "actions": {
+        "Initialize_Settings": {
+          "runAfter": {},
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Settings",
+                "type": "object",
+                "value": "@parameters('HR Triage Settings (hrt_TriageSettings)')"
+              }
+            ]
+          }
+        },
+        "Initialize_Route": {
+          "runAfter": {
+            "Initialize_Settings": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Route",
+                "type": "string",
+                "value": "classify"
+              }
+            ]
+          }
+        },
+        "Initialize_Reason": {
+          "runAfter": {
+            "Initialize_Route": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Reason",
+                "type": "string",
+                "value": ""
+              }
+            ]
+          }
+        },
+        "Initialize_AI": {
+          "runAfter": {
+            "Initialize_Reason": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "AI",
+                "type": "object",
+                "value": {}
+              }
+            ]
+          }
+        },
+        "Initialize_TicketNumber": {
+          "runAfter": {
+            "Initialize_AI": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "TicketNumber",
+                "type": "string",
+                "value": ""
+              }
+            ]
+          }
+        },
+        "Try": {
+          "runAfter": {
+            "Initialize_TicketNumber": [
+              "Succeeded"
+            ]
+          },
+          "type": "Scope",
+          "actions": {
+            "Compose_Email": {
+              "runAfter": {},
+              "type": "Compose",
+              "inputs": {
+                "messageId": "@triggerOutputs()?['body/id']",
+                "internetMessageId": "@triggerOutputs()?['body/internetMessageId']",
+                "conversationId": "@triggerOutputs()?['body/conversationId']",
+                "from": "@coalesce(triggerOutputs()?['body/from'], '')",
+                "fromLower": "@toLower(coalesce(triggerOutputs()?['body/from'], ''))",
+                "subject": "@coalesce(triggerOutputs()?['body/subject'], '(no subject)')",
+                "title": "@substring(coalesce(triggerOutputs()?['body/subject'], '(no subject)'), 0, min(255, length(coalesce(triggerOutputs()?['body/subject'], '(no subject)'))))",
+                "subjectLower": "@toLower(trim(coalesce(triggerOutputs()?['body/subject'], '')))",
+                "bodyPreview": "@coalesce(triggerOutputs()?['body/bodyPreview'], '')",
+                "received": "@triggerOutputs()?['body/receivedDateTime']",
+                "hasAttachments": "@equals(triggerOutputs()?['body/hasAttachments'], true)"
+              },
+              "description": "Normalised view of the incoming email used by every later step."
+            },
+            "Html_to_text": {
+              "runAfter": {
+                "Compose_Email": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_conversionservice",
+                  "operationId": "Html2Text",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_conversionservice"
+                },
+                "parameters": {
+                  "Content": "@coalesce(triggerOutputs()?['body/body'], '')"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Compose_Body_Text": {
+              "runAfter": {
+                "Html_to_text": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": "@if(greater(length(coalesce(body('Html_to_text'), '')), int(variables('Settings')?['maxBodyChars'])), substring(body('Html_to_text'), 0, int(variables('Settings')?['maxBodyChars'])), coalesce(body('Html_to_text'), ''))",
+              "description": "Plain text, truncated to keep prompt cost predictable."
+            },
+            "Stage_1_-_Rules_pre-filter": {
+              "runAfter": {
+                "Compose_Body_Text": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Scope",
+              "actions": {
+                "Filter_ignored_senders": {
+                  "runAfter": {},
+                  "type": "Query",
+                  "inputs": {
+                    "from": "@coalesce(variables('Settings')?['ignoreSenderPatterns'], json('[]'))",
+                    "where": "@contains(outputs('Compose_Email')?['fromLower'], toLower(item()))"
+                  },
+                  "description": "Sender address contains a pattern such as noreply / mailer-daemon / a vendor newsletter domain."
+                },
+                "Filter_ignored_subjects": {
+                  "runAfter": {
+                    "Filter_ignored_senders": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Query",
+                  "inputs": {
+                    "from": "@coalesce(variables('Settings')?['ignoreSubjectPrefixes'], json('[]'))",
+                    "where": "@startsWith(outputs('Compose_Email')?['subjectLower'], toLower(item()))"
+                  },
+                  "description": "Out-of-office, NDRs, meeting responses, read receipts."
+                },
+                "Compose_Ticket_Reference": {
+                  "runAfter": {
+                    "Filter_ignored_subjects": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose",
+                  "inputs": "@if(contains(outputs('Compose_Email')?['subject'], concat('[', variables('Settings')?['ticketPrefix'])), substring(outputs('Compose_Email')?['subject'], add(indexOf(outputs('Compose_Email')?['subject'], concat('[', variables('Settings')?['ticketPrefix'])), 1), min(add(length(variables('Settings')?['ticketPrefix']), 6), sub(length(outputs('Compose_Email')?['subject']), add(indexOf(outputs('Compose_Email')?['subject'], concat('[', variables('Settings')?['ticketPrefix'])), 1)))), '')",
+                  "description": "Extracts a ticket number such as HR-000123 from a subject line like 'RE: Payroll question [HR-000123]'."
+                },
+                "Get_existing_open_ticket": {
+                  "runAfter": {
+                    "Compose_Ticket_Reference": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "GetItems",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('HR SharePoint Site (hrt_SPSite)')",
+                      "table": "@parameters('HR Tickets List (hrt_TicketsList)')",
+                      "$filter": "(ConversationId eq '@{outputs('Compose_Email')?['conversationId']}'@{if(empty(outputs('Compose_Ticket_Reference')), '', concat(' or TicketNumber eq ''', outputs('Compose_Ticket_Reference'), ''''))}) and Status ne 'Closed'",
+                      "$orderby": "ID desc",
+                      "$top": 1
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "description": "Is this email part of a conversation that already has an open ticket? (Index the ConversationId and TicketNumber columns.)"
+                },
+                "Set_Route_-_rules": {
+                  "runAfter": {
+                    "Compose_Is_Standard_Template": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "Route",
+                    "value": "@if(equals(outputs('Compose_Email')?['fromLower'], toLower(parameters('HR Shared Mailbox (hrt_SharedMailbox)'))), 'ignore', if(greater(length(body('Filter_ignored_senders')), 0), 'ignore', if(greater(length(body('Filter_ignored_subjects')), 0), 'ignore', if(greater(length(outputs('Get_existing_open_ticket')?['body/value']), 0), 'thread', 'classify'))))"
+                  }
+                },
+                "Compose_Template_Parts": {
+                  "runAfter": {
+                    "Get_existing_open_ticket": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose",
+                  "inputs": "@split(concat(outputs('Compose_Body_Text'), '||||||||'), '|')",
+                  "description": "Video technique: split the plain-text body on the pipe character. Padding guarantees indexes 0-7 always exist."
+                },
+                "Compose_Is_Standard_Template": {
+                  "runAfter": {
+                    "Compose_Template_Parts": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose",
+                  "inputs": "@and(contains(outputs('Compose_Email')?['subjectLower'], toLower(coalesce(variables('Settings')?['templateSubjectKeyword'], '#none#'))), contains(toLower(outputs('Compose_Template_Parts')[0]), 'request type'), contains(toLower(outputs('Compose_Template_Parts')[2]), 'employee name'), contains(toLower(outputs('Compose_Template_Parts')[4]), 'details'), contains(toLower(outputs('Compose_Template_Parts')[6]), 'urgency'))",
+                  "description": "True when the subject has the template keyword AND the body follows assets/hr-request-email-template.txt."
+                },
+                "Set_Reason_-_rules": {
+                  "runAfter": {
+                    "Set_Route_-_rules": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "Reason",
+                    "value": "@if(equals(variables('Route'), 'classify'), '', if(equals(outputs('Compose_Email')?['fromLower'], toLower(parameters('HR Shared Mailbox (hrt_SharedMailbox)'))), 'Rule: sent by the shared mailbox itself', if(greater(length(body('Filter_ignored_senders')), 0), concat('Rule: ignored sender pattern ', first(body('Filter_ignored_senders'))), if(greater(length(body('Filter_ignored_subjects')), 0), concat('Rule: ignored subject prefix ', first(body('Filter_ignored_subjects'))), concat('Rule: reply on existing ticket ', first(outputs('Get_existing_open_ticket')?['body/value'])?['TicketNumber'])))))"
+                  }
+                },
+                "Condition_-_standard_template": {
+                  "runAfter": {
+                    "Set_Reason_-_rules": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@variables('Route')",
+                          "classify"
+                        ]
+                      },
+                      {
+                        "equals": [
+                          "@outputs('Compose_Is_Standard_Template')",
+                          true
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Set_AI_-_from_template": {
+                      "runAfter": {},
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "AI",
+                        "value": {
+                          "requiresHrAction": true,
+                          "confidence": 1,
+                          "category": "@trim(outputs('Compose_Template_Parts')[1])",
+                          "employeeName": "@trim(outputs('Compose_Template_Parts')[3])",
+                          "summary": "@trim(outputs('Compose_Template_Parts')[5])",
+                          "requestedAction": "@trim(outputs('Compose_Template_Parts')[5])",
+                          "priority": "@trim(outputs('Compose_Template_Parts')[7])",
+                          "sensitive": false,
+                          "nonActionReason": null
+                        }
+                      },
+                      "description": "Field values sit at the odd indexes, exactly like the video's split(...)[1], [3], [5], [7]. Invalid category/priority values are corrected later."
+                    },
+                    "Set_Route_-_template": {
+                      "runAfter": {
+                        "Set_AI_-_from_template": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "Route",
+                        "value": "ticket"
+                      }
+                    },
+                    "Set_Reason_-_template": {
+                      "runAfter": {
+                        "Set_Route_-_template": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "Reason",
+                        "value": "Rule: standard HR request template (parsed with split, Copilot not needed)"
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "description": "Fast path: templated requests become tickets without spending AI credits."
+                }
+              },
+              "description": "Free, deterministic checks that run before Copilot: auto-replies, system senders, and replies on existing tickets."
+            },
+            "Condition_-_needs_Copilot_classification": {
+              "runAfter": {
+                "Stage_1_-_Rules_pre-filter": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@variables('Route')",
+                      "classify"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Stage_2_-_Copilot_classification": {
+                  "runAfter": {},
+                  "type": "Scope",
+                  "actions": {
+                    "Scope_-_Copilot_classification": {
+                      "runAfter": {},
+                      "type": "Scope",
+                      "actions": {
+                        "Run_a_prompt_-_HR_triage": {
+                          "runAfter": {},
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_commondataserviceforapps",
+                              "operationId": "aibuilderpredict_customprompt",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+                            },
+                            "parameters": {
+                              "recordId": "@parameters('HR Triage Prompt Id (hrt_TriagePromptId)')",
+                              "item/requestv2/EmailSender": "@outputs('Compose_Email')?['from']",
+                              "item/requestv2/EmailSubject": "@outputs('Compose_Email')?['subject']",
+                              "item/requestv2/EmailBody": "@outputs('Compose_Body_Text')"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          },
+                          "description": "Copilot / AI Builder prompt 'HR Inbox Triage' (see assets/triage-prompt.md). Returns JSON."
+                        },
+                        "Compose_Clean_AI_output": {
+                          "runAfter": {
+                            "Run_a_prompt_-_HR_triage": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Compose",
+                          "inputs": "@trim(replace(replace(coalesce(outputs('Run_a_prompt_-_HR_triage')?['body/responsev2/predictionOutput/text'], ''), '```json', ''), '```', ''))",
+                          "description": "Strips Markdown code fences in case the model wraps its JSON."
+                        },
+                        "Parse_AI_result": {
+                          "runAfter": {
+                            "Compose_Clean_AI_output": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "ParseJson",
+                          "inputs": {
+                            "content": "@json(outputs('Compose_Clean_AI_output'))",
+                            "schema": {
+                              "type": "object",
+                              "properties": {
+                                "requiresHrAction": {
+                                  "type": "boolean"
+                                },
+                                "confidence": {
+                                  "type": "number"
+                                },
+                                "category": {
+                                  "type": "string"
+                                },
+                                "priority": {
+                                  "type": "string"
+                                },
+                                "sensitive": {
+                                  "type": "boolean"
+                                },
+                                "summary": {
+                                  "type": "string"
+                                },
+                                "requestedAction": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "nonActionReason": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "employeeName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "requiresHrAction",
+                                "confidence",
+                                "category"
+                              ]
+                            }
+                          }
+                        },
+                        "Set_AI": {
+                          "runAfter": {
+                            "Parse_AI_result": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "SetVariable",
+                          "inputs": {
+                            "name": "AI",
+                            "value": "@body('Parse_AI_result')"
+                          }
+                        }
+                      }
+                    },
+                    "Set_AI_-_fallback_when_Copilot_fails": {
+                      "runAfter": {
+                        "Scope_-_Copilot_classification": [
+                          "Failed",
+                          "TimedOut"
+                        ]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "AI",
+                        "value": {
+                          "requiresHrAction": true,
+                          "confidence": 0,
+                          "category": "Other",
+                          "priority": "Medium",
+                          "sensitive": false,
+                          "summary": "@outputs('Compose_Email')?['bodyPreview']",
+                          "requestedAction": "Copilot classification unavailable - triage manually",
+                          "nonActionReason": null
+                        }
+                      },
+                      "description": "Fail-safe: if the prompt errors or returns invalid JSON, the email still becomes a ticket (status Needs Triage). Nothing is silently dropped."
+                    },
+                    "Set_Route_-_Copilot": {
+                      "runAfter": {
+                        "Set_AI_-_fallback_when_Copilot_fails": [
+                          "Succeeded",
+                          "Skipped"
+                        ]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "Route",
+                        "value": "@if(or(equals(variables('AI')?['requiresHrAction'], true), equals(variables('AI')?['sensitive'], true)), 'ticket', if(greaterOrEquals(float(coalesce(variables('AI')?['confidence'], 0)), float(variables('Settings')?['confidenceThreshold'])), 'noaction', 'review'))"
+                      },
+                      "description": "ticket = HR must act (or the email is sensitive). noaction = confidently informational. review = unsure, a human glances at it in the Review folder."
+                    },
+                    "Set_Reason_-_Copilot": {
+                      "runAfter": {
+                        "Set_Route_-_Copilot": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "Reason",
+                        "value": "@if(equals(variables('Route'), 'ticket'), concat('Copilot: HR action required - ', coalesce(variables('AI')?['requestedAction'], '')), concat('Copilot: no HR action - ', coalesce(variables('AI')?['nonActionReason'], '')))"
+                      }
+                    }
+                  },
+                  "description": "Only genuinely new conversations reach the AI prompt."
+                }
+              },
+              "else": {
+                "actions": {}
+              }
+            },
+            "Switch_-_Route": {
+              "runAfter": {
+                "Condition_-_needs_Copilot_classification": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "cases": {
+                "Case_-_ticket": {
+                  "case": "ticket",
+                  "actions": {
+                    "Compose_Ticket_Fields": {
+                      "runAfter": {},
+                      "type": "Compose",
+                      "inputs": {
+                        "category": "@if(contains(variables('Settings')?['categories'], variables('AI')?['category']), variables('AI')?['category'], 'Other')",
+                        "priority": "@if(contains(createArray('Low', 'Medium', 'High', 'Urgent'), variables('AI')?['priority']), variables('AI')?['priority'], 'Medium')",
+                        "sensitive": "@equals(variables('AI')?['sensitive'], true)",
+                        "confidence": "@float(coalesce(variables('AI')?['confidence'], 0))",
+                        "status": "@if(and(equals(variables('AI')?['requiresHrAction'], true), greaterOrEquals(float(coalesce(variables('AI')?['confidence'], 0)), float(variables('Settings')?['confidenceThreshold']))), 'New', 'Needs Triage')"
+                      },
+                      "description": "Validates Copilot output against allowed values - never trust free text from the model."
+                    },
+                    "Compose_Ticket_Routing": {
+                      "runAfter": {
+                        "Compose_Ticket_Fields": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose",
+                      "inputs": {
+                        "assignee": "@if(outputs('Compose_Ticket_Fields')?['sensitive'], variables('Settings')?['sensitiveAssignee'], coalesce(variables('Settings')?['routing']?[outputs('Compose_Ticket_Fields')?['category']], variables('Settings')?['routing']?['default']))",
+                        "dueDate": "@addHours(utcNow(), int(coalesce(variables('Settings')?['slaHours']?[outputs('Compose_Ticket_Fields')?['priority']], 72)))"
+                      },
+                      "description": "Assignee from the routing map in settings; SLA due date from priority."
+                    },
+                    "Create_ticket": {
+                      "runAfter": {
+                        "Compose_Ticket_Routing": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "PostItem",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('HR SharePoint Site (hrt_SPSite)')",
+                          "table": "@parameters('HR Tickets List (hrt_TicketsList)')",
+                          "item/Title": "@outputs('Compose_Email')?['title']",
+                          "item/RequesterEmail": "@outputs('Compose_Email')?['from']",
+                          "item/EmployeeName": "@coalesce(variables('AI')?['employeeName'], '')",
+                          "item/Category/Value": "@outputs('Compose_Ticket_Fields')?['category']",
+                          "item/Priority/Value": "@outputs('Compose_Ticket_Fields')?['priority']",
+                          "item/Status/Value": "@outputs('Compose_Ticket_Fields')?['status']",
+                          "item/AssignedTo/Claims": "@outputs('Compose_Ticket_Routing')?['assignee']",
+                          "item/Summary": "@coalesce(variables('AI')?['summary'], '')",
+                          "item/RequestedAction": "@coalesce(variables('AI')?['requestedAction'], '')",
+                          "item/Sensitive": "@outputs('Compose_Ticket_Fields')?['sensitive']",
+                          "item/AIConfidence": "@outputs('Compose_Ticket_Fields')?['confidence']",
+                          "item/ConversationId": "@outputs('Compose_Email')?['conversationId']",
+                          "item/InternetMessageId": "@outputs('Compose_Email')?['internetMessageId']",
+                          "item/ReceivedOn": "@outputs('Compose_Email')?['received']",
+                          "item/DueDate": "@outputs('Compose_Ticket_Routing')?['dueDate']",
+                          "item/LastActivity": "@utcNow()",
+                          "item/ReplyCount": 0,
+                          "item/ResolutionNotified": false,
+                          "item/OriginalEmail": "@if(outputs('Compose_Ticket_Fields')?['sensitive'], '[Sensitive - open the original email in the HR shared mailbox]', outputs('Compose_Body_Text'))"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    },
+                    "Set_TicketNumber_-_new": {
+                      "runAfter": {
+                        "Create_ticket": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "TicketNumber",
+                        "value": "@concat(variables('Settings')?['ticketPrefix'], formatNumber(outputs('Create_ticket')?['body/ID'], '000000'))"
+                      }
+                    },
+                    "Update_ticket_number": {
+                      "runAfter": {
+                        "Set_TicketNumber_-_new": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "PatchItem",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('HR SharePoint Site (hrt_SPSite)')",
+                          "table": "@parameters('HR Tickets List (hrt_TicketsList)')",
+                          "id": "@outputs('Create_ticket')?['body/ID']",
+                          "item/Title": "@outputs('Compose_Email')?['title']",
+                          "item/TicketNumber": "@variables('TicketNumber')"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    },
+                    "Condition_-_copy_attachments": {
+                      "runAfter": {
+                        "Update_ticket_number": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "If",
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('Settings')?['copyAttachments']",
+                              true
+                            ]
+                          },
+                          {
+                            "equals": [
+                              "@outputs('Compose_Email')?['hasAttachments']",
+                              true
+                            ]
+                          },
+                          {
+                            "equals": [
+                              "@outputs('Compose_Ticket_Fields')?['sensitive']",
+                              false
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "Filter_file_attachments": {
+                          "runAfter": {},
+                          "type": "Query",
+                          "inputs": {
+                            "from": "@coalesce(triggerOutputs()?['body/attachments'], json('[]'))",
+                            "where": "@not(equals(item()?['isInline'], true))"
+                          },
+                          "description": "Skip inline images such as email signatures."
+                        },
+                        "Apply_to_each_attachment": {
+                          "foreach": "@body('Filter_file_attachments')",
+                          "actions": {
+                            "Add_attachment_to_ticket": {
+                              "runAfter": {},
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "host": {
+                                  "connectionName": "shared_sharepointonline",
+                                  "operationId": "CreateAttachment",
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                                },
+                                "parameters": {
+                                  "dataset": "@parameters('HR SharePoint Site (hrt_SPSite)')",
+                                  "table": "@parameters('HR Tickets List (hrt_TicketsList)')",
+                                  "itemId": "@outputs('Create_ticket')?['body/ID']",
+                                  "displayName": "@items('Apply_to_each_attachment')?['name']",
+                                  "body": "@base64ToBinary(items('Apply_to_each_attachment')?['contentBytes'])"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                              }
+                            }
+                          },
+                          "runAfter": {
+                            "Filter_file_attachments": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Foreach"
+                        }
+                      },
+                      "else": {
+                        "actions": {}
+                      },
+                      "description": "Sensitive tickets never get attachments copied to SharePoint - they stay in the mailbox."
+                    },
+                    "Condition_-_send_acknowledgement": {
+                      "runAfter": {
+                        "Condition_-_copy_attachments": [
+                          "Succeeded",
+                          "Failed"
+                        ]
+                      },
+                      "type": "If",
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('Settings')?['sendAcknowledgement']",
+                              true
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "Reply_with_ticket_number": {
+                          "runAfter": {},
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_office365",
+                              "operationId": "ReplyToV3",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                            },
+                            "parameters": {
+                              "messageId": "@outputs('Compose_Email')?['messageId']",
+                              "mailboxAddress": "@parameters('HR Shared Mailbox (hrt_SharedMailbox)')",
+                              "replyParameters/Subject": "RE: @{outputs('Compose_Email')?['subject']} [@{variables('TicketNumber')}]",
+                              "replyParameters/Body": "<p>Hello,</p><p>Thanks for contacting HR. Your request has been logged as ticket <b>@{variables('TicketNumber')}</b> and assigned to the right team member.</p><p>Please keep <b>[@{variables('TicketNumber')}]</b> in the subject line if you reply, so your message is added to the same ticket.</p><p>Kind regards,<br/>HR Team</p>",
+                              "replyParameters/ReplyAll": false,
+                              "replyParameters/Importance": "Normal"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          },
+                          "description": "Requires Send As / Send on Behalf permission on the shared mailbox for the connection account."
+                        }
+                      },
+                      "else": {
+                        "actions": {}
+                      }
+                    }
+                  }
+                },
+                "Case_-_thread": {
+                  "case": "thread",
+                  "actions": {
+                    "Compose_Existing_Ticket": {
+                      "runAfter": {},
+                      "type": "Compose",
+                      "inputs": "@first(outputs('Get_existing_open_ticket')?['body/value'])"
+                    },
+                    "Update_existing_ticket": {
+                      "runAfter": {
+                        "Compose_Existing_Ticket": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "PatchItem",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('HR SharePoint Site (hrt_SPSite)')",
+                          "table": "@parameters('HR Tickets List (hrt_TicketsList)')",
+                          "id": "@outputs('Compose_Existing_Ticket')?['ID']",
+                          "item/Title": "@outputs('Compose_Existing_Ticket')?['Title']",
+                          "item/Status/Value": "@if(contains(createArray('Waiting on Requester', 'Resolved'), outputs('Compose_Existing_Ticket')?['Status']?['Value']), 'Requester Replied', outputs('Compose_Existing_Ticket')?['Status']?['Value'])",
+                          "item/LastActivity": "@utcNow()",
+                          "item/ReplyCount": "@add(int(coalesce(outputs('Compose_Existing_Ticket')?['ReplyCount'], 0)), 1)",
+                          "item/ResolutionNotified": false,
+                          "item/ThreadLog": "@concat(coalesce(outputs('Compose_Existing_Ticket')?['ThreadLog'], ''), utcNow(), ' | ', outputs('Compose_Email')?['from'], ' | ', outputs('Compose_Email')?['bodyPreview'], decodeUriComponent('%0A'))"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      },
+                      "description": "Replies never create duplicate tickets. A reply on a Waiting/Resolved ticket flips it to 'Requester Replied'."
+                    },
+                    "Set_TicketNumber_-_existing": {
+                      "runAfter": {
+                        "Update_existing_ticket": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "TicketNumber",
+                        "value": "@outputs('Compose_Existing_Ticket')?['TicketNumber']"
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "actions": {}
+              },
+              "expression": "@variables('Route')",
+              "type": "Switch",
+              "description": "ignore / noaction / review need no list item - only the folder move and log below."
+            },
+            "Compose_Target_Folder": {
+              "runAfter": {
+                "Switch_-_Route": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": "@if(contains(createArray('ticket', 'thread'), variables('Route')), variables('Settings')?['folders']?['ticketed'], if(contains(createArray('ignore', 'noaction'), variables('Route')), variables('Settings')?['folders']?['noAction'], variables('Settings')?['folders']?['review']))"
+            },
+            "Condition_-_move_email": {
+              "runAfter": {
+                "Compose_Target_Folder": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@variables('Settings')?['moveEmails']",
+                      true
+                    ]
+                  },
+                  {
+                    "not": {
+                      "equals": [
+                        "@empty(outputs('Compose_Target_Folder'))",
+                        true
+                      ]
+                    }
+                  }
+                ]
+              },
+              "actions": {
+                "Move_email_to_triage_folder": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_office365",
+                      "operationId": "MoveV2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                    },
+                    "parameters": {
+                      "messageId": "@outputs('Compose_Email')?['messageId']",
+                      "folderPath": "@outputs('Compose_Target_Folder')",
+                      "mailboxAddress": "@parameters('HR Shared Mailbox (hrt_SharedMailbox)')"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "description": "Leaves the Inbox empty except for mail the flow could not process."
+                }
+              },
+              "else": {
+                "actions": {}
+              }
+            },
+            "Condition_-_log_decision": {
+              "runAfter": {
+                "Condition_-_move_email": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@variables('Settings')?['logDecisions']",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Create_triage_log_entry": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('HR SharePoint Site (hrt_SPSite)')",
+                      "table": "@parameters('HR Triage Log List (hrt_TriageLogList)')",
+                      "item/Title": "@outputs('Compose_Email')?['title']",
+                      "item/Sender": "@outputs('Compose_Email')?['from']",
+                      "item/ReceivedOn": "@outputs('Compose_Email')?['received']",
+                      "item/Decision/Value": "@variables('Route')",
+                      "item/Reason": "@variables('Reason')",
+                      "item/TicketNumber": "@variables('TicketNumber')",
+                      "item/AICategory": "@coalesce(variables('AI')?['category'], '')",
+                      "item/AIConfidence": "@float(coalesce(variables('AI')?['confidence'], 0))",
+                      "item/AISummary": "@if(equals(variables('AI')?['sensitive'], true), '[Sensitive]', coalesce(variables('AI')?['summary'], ''))",
+                      "item/ConversationId": "@outputs('Compose_Email')?['conversationId']",
+                      "item/FlowRun": "@{concat('https://make.powerautomate.com/environments/', workflow()?['tags']?['environmentName'], '/flows/', workflow()?['name'], '/runs/', workflow()?['run']?['name'])}"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "description": "Audit trail of every decision. HR reviews the HumanVerdict column weekly to tune the prompt and rules."
+                }
+              },
+              "else": {
+                "actions": {}
+              }
+            }
+          }
+        },
+        "Catch": {
+          "runAfter": {
+            "Try": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "type": "Scope",
+          "actions": {
+            "Send_failure_alert": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "@variables('Settings')?['adminEmail']",
+                  "emailMessage/Subject": "[HR Triage] HR inbox triage failed",
+                  "emailMessage/Body": "<p>The <b>HR inbox triage</b> flow failed.</p><p><a href=\"@{concat('https://make.powerautomate.com/environments/', workflow()?['tags']?['environmentName'], '/flows/', workflow()?['name'], '/runs/', workflow()?['run']?['name'])}\">Open the failed run</a></p><p>Check the run history; the email (if any) has been left in the shared mailbox Inbox so it can be re-processed or handled manually.</p>",
+                  "emailMessage/Importance": "High"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Terminate_as_failed": {
+              "runAfter": {
+                "Send_failure_alert": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "HRTriageFailed",
+                  "message": "HR inbox triage failed - see Try scope"
+                }
+              }
+            }
+          },
+          "description": "Catch: alerts the HR automation admin with a link to the failed run."
+        }
+      }
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}

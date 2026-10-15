@@ -1,0 +1,98 @@
+{
+  "description": "Seed rows for the HR Change Templates list (master SOP checklists, never completed themselves). The router copies these into HR Change Tasks for every new request. automation: Approval = ticked by the Approvals flow; Resolution = ticked by the Resolution flow when Status becomes 3-Resolved. blocked = stays 'Blocked - awaiting approval' until approved. dueOnEffectiveDate = task due date is the last day / effective date.",
+  "templates": {
+    "A1 — Offboarding (Voluntary)": [
+      { "title": "Confirm last day and exit reason", "details": "Capture: resignation, end of contract, or mutual separation" },
+      { "title": "Obtain resignation letter from manager → save to HR file" },
+      { "title": "Acknowledge receipt to manager; send link to New Req Request form (backfill)", "owner": "Talent" },
+      { "title": "Forward resignation letter to relevant People leadership" },
+      { "title": "Schedule exit interview" },
+      { "title": "Send change-in-relationship notice as PDF to employee; file copy into HR file" },
+      { "title": "Add to Monday payroll board — final pay and PTO payout", "owner": "Payroll" },
+      { "title": "Notify offboarding distro", "details": "Triggers: Tech ticket to Methodology (access revocation) • Credentialing team deactivates in Medallion • ICS confirms whether client-issued equipment needs return • Equipment return materials sent if applicable (client included if embedded)" },
+      { "title": "Create Jira ticket → access revocation + equipment retrieval (IT)", "owner": "IT", "details": "Paste the ticket link into the request's Jira link field" },
+      { "title": "Remove from Joon / BetterHelp" },
+      { "title": "Terminate in Paycor — on last day only (do not enter early; date may shift)", "dueOnEffectiveDate": true },
+      { "title": "Update Employee List" },
+      { "title": "Move HR folder to Termed (PC entity or LLC entity per applicable structure)" },
+      { "title": "Track equipment return" },
+      { "title": "Send exit interview feedback to manager / People leadership" },
+      { "title": "Confirm completion → post summary to HR intake channel", "automation": "Resolution" }
+    ],
+    "A2 — Offboarding (Involuntary)": [
+      { "title": "Confirm last day and exit reason", "details": "Capture: termination, reduction in force, end of contract (non-renewed), or performance-based" },
+      { "title": "Notify offboarding distro", "details": "Triggers: Tech ticket to Methodology (access revocation — timing-sensitive, coordinate with last day) • Credentialing team deactivates in Medallion • ICS confirms whether client-issued equipment needs return • Equipment return materials sent if applicable (client included if embedded)" },
+      { "title": "Create Jira ticket → access revocation + equipment retrieval (IT)", "owner": "IT", "details": "Paste the ticket link into the request's Jira link field" },
+      { "title": "Generate termination letter (Word template) → send to employee with letter attached" },
+      { "title": "Send change-in-relationship notice as PDF to employee; file copy into HR file" },
+      { "title": "Add to Monday payroll board — final pay and PTO payout", "owner": "Payroll" },
+      { "title": "Remove from Joon / BetterHelp" },
+      { "title": "Terminate in Paycor — on last day only (do not enter early; date may shift)", "dueOnEffectiveDate": true },
+      { "title": "Update Employee List" },
+      { "title": "Move HR folder to Termed (PC entity or LLC entity per applicable structure)" },
+      { "title": "Track equipment return" },
+      { "title": "Confirm completion → post summary to HR intake channel", "automation": "Resolution" }
+    ],
+    "B — Job / Status Change": [
+      { "title": "Confirm new title, department, location, FT/PT/PRN status" },
+      { "title": "Route approval request → manager + Regional (per approval matrix)", "automation": "Approval", "details": "Automatic: HR Change - 3 Approvals" },
+      { "title": "On approval: update Paycor", "blocked": true },
+      { "title": "Trigger Directory sync (Step 2, Project 10k)", "blocked": true },
+      { "title": "Close-the-loop email to requestor", "automation": "Resolution" },
+      { "title": "Mark list item complete", "automation": "Resolution" }
+    ],
+    "C — Comp Change": [
+      { "title": "Confirm new rate, effective pay period" },
+      { "title": "Route approval → manager, Regional, HR (per approval matrix)", "automation": "Approval", "details": "Automatic: HR Change - 3 Approvals" },
+      { "title": "On approval: notify payroll via email or Monday payroll board post", "owner": "Payroll", "blocked": true },
+      { "title": "Update Paycor", "blocked": true },
+      { "title": "Close-the-loop email to requestor", "automation": "Resolution" },
+      { "title": "Mark list item complete", "automation": "Resolution" }
+    ],
+    "D — Pay / Banking Change": [
+      { "title": "Flag for manual verification → DM CJ or Johanna" },
+      { "title": "Verify supporting documentation received" },
+      { "title": "Execute change in Paycor" },
+      { "title": "Log verification + completion to list item", "automation": "Resolution" },
+      { "title": "Close-the-loop to requestor", "automation": "Resolution" },
+      { "title": "Mark list item complete", "automation": "Resolution" }
+    ],
+    "E — Personal Data Change": [
+      { "title": "Confirm field(s) changing and new value" },
+      { "title": "Update in Paycor" },
+      { "title": "Log completion to list item", "automation": "Resolution" },
+      { "title": "Close-the-loop to requestor", "automation": "Resolution" },
+      { "title": "Mark list item complete", "automation": "Resolution" }
+    ],
+    "F — Time / PTO": [
+      { "title": "Confirm request type, dates, hours" },
+      { "title": "Route to manager for approval", "automation": "Approval", "details": "Automatic: HR Change - 3 Approvals (replaces the Slack DM step)" },
+      { "title": "On approval: log in Paycor", "blocked": true },
+      { "title": "Close-the-loop to requestor", "automation": "Resolution" },
+      { "title": "Mark list item complete", "automation": "Resolution" }
+    ],
+    "G — LOA": [
+      { "title": "Confirm leave type, start date, expected return" },
+      { "title": "Verify documentation received" },
+      { "title": "Route to CJ for case management setup", "owner": "CJ" },
+      { "title": "Notify payroll of leave dates", "owner": "Payroll" },
+      { "title": "Update Paycor" },
+      { "title": "Log to list item with return date noted", "details": "Keep 'End / expected return' current on the request - the daily digest flags returns due within 7 days" },
+      { "title": "Keep item open (1-Assigned) until return confirmed", "details": "Only set 3-Resolved once the return is confirmed" }
+    ],
+    "H — Benefits / Life Event": [
+      { "title": "Confirm event type and qualifying date" },
+      { "title": "Verify documentation received" },
+      { "title": "Route to benefits team or process in Employee Navigator" },
+      { "title": "Confirm enrollment/change effective" },
+      { "title": "Close-the-loop to requestor", "automation": "Resolution" },
+      { "title": "Mark list item complete", "automation": "Resolution" }
+    ],
+    "I — Fractional FTE / Extra Shift Pickup": [
+      { "title": "HR approval: review against predetermined criteria", "automation": "Approval", "details": "Rate validity, hours/dates make sense, within policy. Automatic: HR Change - 3 Approvals" },
+      { "title": "Earning setup: add a single event earning in Paycor", "blocked": true, "details": "Rate type (hourly vs. flat day rate) drives which earning code is used" },
+      { "title": "Confirm the earning is logged against the correct pay period", "blocked": true, "details": "Check Pay period / Submitted after cutoff on the request" },
+      { "title": "Mark list item complete (3-Resolved) once the earning is entered", "automation": "Resolution", "details": "Payroll is then notified automatically to verify in Paycor. They are a verifier, not a gate" }
+    ]
+  }
+}

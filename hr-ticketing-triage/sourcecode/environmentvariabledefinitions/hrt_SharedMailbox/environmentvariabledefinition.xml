@@ -1,0 +1,14 @@
+<environmentvariabledefinition schemaname="hrt_SharedMailbox">
+  <defaultvalue>hr@contoso.com</defaultvalue>
+  <description default="Address of the HR shared mailbox, e.g. hr@contoso.com">
+    <label description="Address of the HR shared mailbox, e.g. hr@contoso.com" languagecode="1033" />
+  </description>
+  <displayname default="HR Shared Mailbox">
+    <label description="HR Shared Mailbox" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

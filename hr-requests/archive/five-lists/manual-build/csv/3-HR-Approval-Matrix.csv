@@ -1,0 +1,4 @@
+﻿Title,Role,Region,ApproverEmail,Active
+Regional approver - default,Regional,*,regional.director@contoso.com,Yes
+HR approver,HR,*,cj@contoso.com,Yes
+Payroll approver (only if Payroll is added as a stage),Payroll,*,payroll@contoso.com,Yes
